@@ -1,57 +1,42 @@
 // ═══════════════════════════════════════════════════════════════
-// NETLIFY FUNCTION - Genera Relazioni Cliniche
-// Sostituisce il server Express con una serverless function
+// VERCEL SERVERLESS FUNCTION - Genera Relazioni Cliniche
+// Formato corretto per Vercel (non Netlify!)
 // ═══════════════════════════════════════════════════════════════
 
 const fetch = require('node-fetch');
 
-exports.handler = async (event, context) => {
+module.exports = async (req, res) => {
   
   // ── CORS Headers ──
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Content-Type': 'application/json'
-  };
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   // Handle preflight
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
   
   // Only POST allowed
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
   
   try {
     // Parse request body
-    const { cartella, reportType, header, doctorName, oggi } = JSON.parse(event.body);
+    const { cartella, reportType, header, doctorName, oggi } = req.body;
     
     // Get API key from environment variable
     const API_KEY = process.env.ANTHROPIC_API_KEY;
     
     if (!API_KEY) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ 
-          error: 'API Key non configurata. Configura ANTHROPIC_API_KEY nelle variabili d\'ambiente di Netlify.' 
-        })
-      };
+      return res.status(500).json({ 
+        error: 'API Key non configurata. Configura ANTHROPIC_API_KEY nelle variabili d\'ambiente di Vercel.' 
+      });
     }
     
     if (!cartella) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Dati cartella mancanti' })
-      };
+      return res.status(400).json({ error: 'Dati cartella mancanti' });
     }
     
     // Build prompts
@@ -77,7 +62,7 @@ Genera una relazione clinica professionale completa seguendo esattamente lo sche
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,  // Vercel ha timeout 60 sec
+        max_tokens: 4000,
         messages: [{
           role: 'user',
           content: userPrompt
@@ -89,45 +74,33 @@ Genera una relazione clinica professionale completa seguendo esattamente lo sche
     if (!response.ok) {
       const error = await response.json();
       console.error('❌ Errore API Claude:', error);
-      return {
-        statusCode: response.status,
-        headers,
-        body: JSON.stringify({ 
-          error: error.error?.message || 'Errore chiamata API Claude' 
-        })
-      };
+      return res.status(response.status).json({ 
+        error: error.error?.message || 'Errore chiamata API Claude' 
+      });
     }
     
     const data = await response.json();
     const html = data.content[0].text;
     
-    console.log('✅ Relazione generata');
+    console.log('✅ Relazione generata con successo');
     
     // Calculate cost estimate
     const inputTokens = data.usage?.input_tokens || 0;
     const outputTokens = data.usage?.output_tokens || 0;
     const cost = ((inputTokens * 0.003 + outputTokens * 0.015) / 1000).toFixed(4);
     
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ 
-        html, 
-        usage: {
-          inputTokens,
-          outputTokens,
-          cost
-        }
-      })
-    };
+    return res.status(200).json({ 
+      html, 
+      usage: {
+        inputTokens,
+        outputTokens,
+        cost
+      }
+    });
     
   } catch (error) {
     console.error('❌ Errore function:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: error.message || 'Errore interno' })
-    };
+    return res.status(500).json({ error: error.message || 'Errore interno' });
   }
 };
 
