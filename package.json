@@ -1,0 +1,10 @@
+{
+  "name": "relazioni-cliniche-netlify",
+  "version": "1.0.0",
+  "description": "Generatore relazioni cliniche con Claude AI su Netlify",
+  "author": "Dr. Carlo Piscicelli",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  }
+}

@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generatore Relazioni Cliniche AI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&display=swap');
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+  }
+  
+  .container { max-width: 1800px; margin: 0 auto; }
+  
+  .app-header {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 24px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+  }
+  
+  .app-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+  }
+  
+  .app-subtitle {
+    font-size: 14px;
+    color: #64748b;
+  }
+  
+  .cloud-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+    background: #d1fae5;
+    color: #065f46;
+  }
+  
+  .settings-panel {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+  }
+  
+  .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  
+  .settings-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  
+  .settings-toggle {
+    font-size: 20px;
+    transition: transform 0.3s;
+  }
+  
+  .settings-toggle.collapsed {
+    transform: rotate(-90deg);
+  }
+  
+  .settings-content {
+    max-height: 500px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+  }
+  
+  .settings-content.collapsed {
+    max-height: 0;
+  }
+  
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding-top: 20px;
+  }
+  
+  .setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .setting-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .setting-input, .setting-select, .setting-textarea {
+    padding: 10px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+  }
+  
+  .setting-input:focus, .setting-select:focus, .setting-textarea:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+  
+  .setting-textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: 'Courier New', monospace;
+  }
+  
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 24px;
+    align-items: start;
+  }
+  
+  @media (max-width: 1400px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .settings-grid { grid-template-columns: 1fr; }
+  }
+  
+  .panel {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+  }
+  
+  .panel-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  
+  .input-area {
+    width: 100%;
+    min-height: 400px;
+    padding: 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+  
+  .input-area:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+  
+  .btn-primary {
+    width: 100%;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+  }
+  
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .btn-secondary {
+    padding: 10px 20px;
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 12px;
+  }
+  
+  .btn-secondary:hover {
+    background: #667eea;
+    color: white;
+  }
+  
+  .output-container {
+    position: sticky;
+    top: 20px;
+  }
+  
+  .output-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .preview-frame {
+    background: white;
+    border-radius: 8px;
+    padding: 40px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    max-height: 75vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  .preview-frame[contenteditable="true"] {
+    border: 2px dashed #667eea;
+  }
+  
+  .edit-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #667eea;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    color: #94a3b8;
+  }
+  
+  .empty-state-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+  
+  .report {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 10.8pt;
+    line-height: 1.62;
+    color: #1e1e1e;
+  }
+  
+  .report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2.5px solid #1b2d4f;
+    padding-bottom: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .report-institution {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #1b2d4f;
+  }
+  
+  .report-department {
+    font-size: 9pt;
+    color: #6b7a8d;
+    font-style: italic;
+    margin-top: 4px;
+  }
+  
+  .report-date {
+    font-size: 9pt;
+    color: #8a95a3;
+    text-align: right;
+  }
+  
+  .report-title {
+    text-align: center;
+    font-size: 14pt;
+    font-weight: 700;
+    color: #1b2d4f;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 14px 0 4px;
+  }
+  
+  .report-subtitle {
+    text-align: center;
+    font-size: 9pt;
+    color: #8a95a3;
+    margin-bottom: 20px;
+  }
+  
+  .patient-card {
+    background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%);
+    border: 1px solid #dce4ed;
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+  }
+  
+  .patient-name {
+    font-size: 16pt;
+    font-weight: 700;
+    color: #1b2d4f;
+    border-bottom: 1px solid #cdd5e0;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+  
+  .patient-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px 24px;
+  }
+  
+  .patient-field {
+    margin-bottom: 8px;
+  }
+  
+  .patient-label {
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    color: #8a95a3;
+    letter-spacing: 0.7px;
+    display: block;
+  }
+  
+  .patient-value {
+    font-size: 10pt;
+    font-weight: 600;
+    color: #1e1e1e;
+    margin-top: 2px;
+  }
+  
+  .report h2 {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #1b2d4f;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1.5px solid #1b2d4f;
+    padding-bottom: 5px;
+    margin: 22px 0 10px;
+  }
+  
+  .report h3 {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: #2c4268;
+    margin: 16px 0 6px;
+    padding-left: 11px;
+    border-left: 3px solid #1b2d4f;
+  }
+  
+  .report p {
+    text-align: justify;
+    margin-bottom: 8px;
+  }
+  
+  .report strong {
+    color: #1b2d4f;
+  }
+  
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    margin: 10px 0 16px;
+  }
+  
+  .report-table thead th {
+    background: #1b2d4f;
+    color: white;
+    padding: 6px 9px;
+    text-align: left;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  
+  .report-table tbody td {
+    padding: 5px 9px;
+    border-bottom: 1px solid #e8ecf0;
+    vertical-align: top;
+  }
+  
+  .report-table tbody tr:nth-child(even) td {
+    background: #f8fafb;
+  }
+  
+  .alert {
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 10pt;
+    line-height: 1.55;
+  }
+  
+  .alert-info {
+    background: #f0f7ff;
+    border: 1px solid #b8d4f0;
+    border-left: 4px solid #2980b9;
+  }
+  
+  .signature-block {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 48px;
+    padding-top: 8px;
+  }
+  
+  .signature-line {
+    height: 40px;
+    border-bottom: 1px solid #333;
+  }
+  
+  .signature-label {
+    font-size: 8pt;
+    color: #8a95a3;
+    margin-top: 4px;
+  }
+  
+  .loader {
+    display: none;
+    text-align: center;
+    padding: 40px;
+  }
+  
+  .loader.active {
+    display: block;
+  }
+  
+  .spinner {
+    border: 4px solid #f3f4f6;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .cost-estimate {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 8px;
+    text-align: center;
+  }
+  
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1e293b;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+  }
+  
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .toast.error {
+    background: #dc2626;
+  }
+  
+  @media print {
+    body { background: white; padding: 0; }
+    .app-header, .settings-panel, .panel, .btn-primary, .btn-secondary, .output-actions, .edit-badge {
+      display: none !important;
+    }
+    .main-grid { display: block; }
+    .preview-frame {
+      box-shadow: none;
+      padding: 0;
+      max-height: none;
+      border: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="app-header">
+    <div class="app-title">🏥 Generatore Relazioni Cliniche AI</div>
+    <div class="app-subtitle">Powered by Claude API su Vercel - Relazioni complete senza limiti di timeout</div>
+    <div class="cloud-badge">
+      <span>⚡</span>
+      <span>Deploy su Vercel</span>
+    </div>
+  </div>
+  
+  <div class="settings-panel">
+    <div class="settings-header" onclick="toggleSettings()">
+      <div class="settings-title">⚙️ Configurazione</div>
+      <div class="settings-toggle" id="settingsToggle">▼</div>
+    </div>
+    <div class="settings-content" id="settingsContent">
+      <div class="settings-grid">
+        
+        <div class="setting-group">
+          <label class="setting-label">📋 Tipo Relazione</label>
+          <select id="reportType" class="setting-select">
+            <option value="obstetric">Ostetrica (Monitoraggio Gravidanza)</option>
+            <option value="gynecologic">Ginecologica (Visita Ambulatoriale)</option>
+          </select>
+        </div>
+        
+        <div class="setting-group">
+          <label class="setting-label">🏛️ Intestazione</label>
+          <select id="headerType" class="setting-select" onchange="updateCustomHeader()">
+            <option value="gemelli">Fondazione Policlinico Gemelli IRCCS</option>
+            <option value="balduina">Balduina Medica</option>
+            <option value="apollodoro">Poliambulatorio Apollodoro</option>
+            <option value="itor">Nuova Itor Casa di Cura</option>
+            <option value="custom">Personalizzata...</option>
+          </select>
+        </div>
+        
+        <div class="setting-group" id="customHeaderGroup" style="display: none; grid-column: 1 / -1;">
+          <label class="setting-label">Intestazione Personalizzata</label>
+          <textarea id="customHeader" class="setting-textarea" placeholder="Istituzione&#10;Dipartimento / Reparto (opzionale)"></textarea>
+        </div>
+        
+        <div class="setting-group">
+          <label class="setting-label">👨‍⚕️ Nome Medico</label>
+          <input type="text" id="doctorName" class="setting-input" placeholder="Dott. Carlo Piscicelli" value="Dott. Carlo Piscicelli">
+        </div>
+        
+      </div>
+    </div>
+  </div>
+  
+  <div class="main-grid">
+    
+    <div class="panel">
+      <div class="panel-title">📋 Dati Cartella Clinica</div>
+      <textarea id="inputData" class="input-area" placeholder="Incolla qui i dati della cartella dal tuo database...
+
+Per RELAZIONE OSTETRICA:
+Sig.ra: NOME COGNOME
+Anni: 36
+Gravida: 1
+Para: 0
+U.M.: 11/06/2025
+...
+
+Per RELAZIONE GINECOLOGICA:
+Anni 30
+UM. 22/01/2026
+Note anamnestiche: cicli regolari, parità 0/0/0/0
+Motivo della visita: controllo
+Alla visita: ..."></textarea>
+      <button class="btn-primary" onclick="generateReport()" id="generateBtn">
+        <span>✨ Genera Relazione con AI</span>
+      </button>
+      <div class="cost-estimate" id="costEstimate"></div>
+    </div>
+    
+    <div class="output-container">
+      <div class="panel">
+        <div class="panel-title">📄 Relazione Generata (Modificabile)</div>
+        
+        <div class="output-actions" id="outputActions" style="display: none;">
+          <button class="btn-secondary" onclick="copyHTML()">📋 Copia HTML</button>
+          <button class="btn-secondary" onclick="window.print()">🖨️ Stampa / PDF</button>
+          <button class="btn-secondary" onclick="clearAll()">🔄 Nuova</button>
+        </div>
+        
+        <div class="preview-frame" id="previewFrame" contenteditable="false">
+          <div class="empty-state">
+            <div class="empty-state-icon">🤖</div>
+            <div><strong>Pronto all'uso!</strong> Incolla i dati e genera la relazione</div>
+            <div style="margin-top: 12px; font-size: 13px;">La relazione sarà modificabile direttamente qui</div>
+          </div>
+        </div>
+        
+        <div class="loader" id="loader">
+          <div class="spinner"></div>
+          <div>Claude sta generando la relazione...</div>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 8px;">Circa 5-10 secondi</div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// API endpoint - Vercel Function
+const API_URL = '/api/generate';
+
+function toggleSettings() {
+  document.getElementById('settingsContent').classList.toggle('collapsed');
+  document.getElementById('settingsToggle').classList.toggle('collapsed');
+}
+
+function updateCustomHeader() {
+  const visible = document.getElementById('headerType').value === 'custom';
+  document.getElementById('customHeaderGroup').style.display = visible ? 'block' : 'none';
+}
+
+function getHeader() {
+  const type = document.getElementById('headerType').value;
+  const headers = {
+    gemelli: { institution: 'Fondazione Policlinico Universitario Agostino Gemelli IRCCS', department: 'Dipartimento di Ostetricia e Ginecologia' },
+    balduina: { institution: 'Balduina Medica', department: 'Ambulatorio di Ostetricia e Ginecologia' },
+    apollodoro: { institution: 'Poliambulatorio Apollodoro', department: 'Servizio di Ginecologia e Ostetricia' },
+    itor: { institution: 'Nuova Itor Casa di Cura', department: 'Reparto di Ostetricia e Ginecologia' }
+  };
+  
+  if (type === 'custom') {
+    const lines = document.getElementById('customHeader').value.trim().split('\n').filter(l => l.trim());
+    return { institution: lines[0] || 'Struttura Sanitaria', department: lines[1] || '' };
+  }
+  
+  return headers[type];
+}
+
+async function generateReport() {
+  const cartella = document.getElementById('inputData').value.trim();
+  
+  if (!cartella) {
+    showToast('⚠️ Incolla prima i dati della cartella', 'error');
+    return;
+  }
+  
+  document.getElementById('loader').classList.add('active');
+  document.getElementById('previewFrame').style.display = 'none';
+  document.getElementById('generateBtn').disabled = true;
+  
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cartella,
+        reportType: document.getElementById('reportType').value,
+        header: getHeader(),
+        doctorName: document.getElementById('doctorName').value.trim() || 'Medico Responsabile',
+        oggi: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (!res.ok) throw new Error(data.error || 'Errore generazione');
+    
+    const frame = document.getElementById('previewFrame');
+    frame.innerHTML = data.html + '<div class="edit-badge">✏️ Modificabile</div>';
+    frame.style.display = 'block';
+    frame.setAttribute('contenteditable', 'true');
+    
+    document.getElementById('loader').classList.remove('active');
+    document.getElementById('outputActions').style.display = 'flex';
+    document.getElementById('generateBtn').disabled = false;
+    
+    if (data.usage) {
+      document.getElementById('costEstimate').textContent = 
+        `Token: ${data.usage.inputTokens} + ${data.usage.outputTokens} • Costo: ~$${data.usage.cost}`;
+    }
+    
+    showToast('✅ Relazione generata! Puoi modificarla');
+    
+  } catch (err) {
+    document.getElementById('loader').classList.remove('active');
+    document.getElementById('previewFrame').style.display = 'block';
+    document.getElementById('previewFrame').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">❌</div>
+        <div style="color: #ef4444; font-weight: 600;">Errore</div>
+        <div style="font-size: 13px; color: #94a3b8; margin-top: 12px;">${err.message}</div>
+      </div>
+    `;
+    document.getElementById('generateBtn').disabled = false;
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+
+function copyHTML() {
+  const frame = document.getElementById('previewFrame');
+  const badge = frame.querySelector('.edit-badge');
+  if (badge) badge.remove();
+  
+  const fullHTML = `<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Relazione Clinica</title>
+<style>${document.querySelector('style').textContent}</style>
+</head>
+<body>
+${frame.innerHTML}
+</body>
+</html>`;
+  
+  navigator.clipboard.writeText(fullHTML).then(() => {
+    showToast('✅ HTML copiato!');
+  }).catch(() => {
+    showToast('❌ Errore copia', 'error');
+  });
+}
+
+function clearAll() {
+  document.getElementById('inputData').value = '';
+  document.getElementById('previewFrame').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-state-icon">🤖</div>
+      <div><strong>Pronto!</strong> Incolla i dati e genera la relazione</div>
+    </div>
+  `;
+  document.getElementById('previewFrame').setAttribute('contenteditable', 'false');
+  document.getElementById('outputActions').style.display = 'none';
+  document.getElementById('costEstimate').textContent = '';
+}
+
+function showToast(msg, type = 'info') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'toast show';
+  if (type === 'error') toast.classList.add('error');
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+window.loadObstetric = function() {
+  document.getElementById('reportType').value = 'obstetric';
+  document.getElementById('inputData').value = `Sig.ra: LUDOVICA  FERRI
+Anni: 36
+Gravida: 1
+Para: 0
+U.M.: 11/06/2025
+D.P.P.: 18/03/2026
+IMC: 19 normopeso
+Gruppo: 0 NEGATIVO
+Malattie personali: lieve irregolarità mestruale. marito Rh pos
+Malattie in famiglia: mamma k ovaio
+Interventi chirurgici: resezione polipo nel 2021
+Farmaci assunti in gravidanza: Ac folico, Cardirene, Immunoglobuline anti Rh
+Note sulla gravidanza attuale: Biometria 13° pc`;
+  showToast('📋 Esempio ostetrico caricato');
+};
+
+window.loadGynecologic = function() {
+  document.getElementById('reportType').value = 'gynecologic';
+  document.getElementById('inputData').value = `Anni 30
+UM. 22/01/2026
+Note anamnestiche: cicli regolari, parità 0/0/0/0; vaccinata per HPV
+Motivo della visita: controllo
+
+Alla visita: 
+- utero di volume normale, annessi non palpabili
+- cervice appare iperemica e facilmente sanguinante circondata da leucorrea giallastra abbondante
+- effettuato PAP test
+- non si palpano noduli mammari; assenza di secrezione provocata
+
+Eseguita Ecografia di supporto (office):
+- endometrio trilaminare secretivo mm 7,6
+- non evidenza di alterazioni in sede annessiale
+- Douglas virtuale
+
+Si prescrive:
+- Terapia allegata (Crispact)`;
+  showToast('📋 Esempio ginecologico caricato');
+};
+</script>
+
+<div style="text-align: center; color: rgba(255,255,255,0.85); margin-top: 24px; font-size: 13px;">
+  <strong>Test rapido:</strong> 
+  <a href="javascript:loadObstetric()" style="color: white; text-decoration: underline; margin: 0 12px;">Esempio Ostetrico</a> | 
+  <a href="javascript:loadGynecologic()" style="color: white; text-decoration: underline; margin: 0 12px;">Esempio Ginecologico</a>
+</div>
+
+<div style="text-align: center; color: rgba(255,255,255,0.7); margin-top: 12px; font-size: 12px;">
+  Deploy su Netlify • Accessibile ovunque • API key sicura
+</div>
+
+</body>
+</html>
