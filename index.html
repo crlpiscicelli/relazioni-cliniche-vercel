@@ -527,7 +527,6 @@
       max-width: none !important;
       margin: 0 !important;
     }
-    /* Nascondi tutto tranne la relazione */
     .app-header, 
     .settings-panel, 
     .panel-title,
@@ -538,7 +537,6 @@
     .toast {
       display: none !important;
     }
-    /* Nascondi il pannello di input */
     .main-grid > .panel {
       display: none !important;
     }
@@ -561,7 +559,6 @@
       border: none !important;
       overflow: visible !important;
     }
-    /* Assicura che la relazione sia visibile */
     .report {
       display: block !important;
       visibility: visible !important;
@@ -594,6 +591,14 @@
           <select id="reportType" class="setting-select">
             <option value="obstetric">Ostetrica (Monitoraggio Gravidanza)</option>
             <option value="gynecologic">Ginecologica (Visita Ambulatoriale)</option>
+          </select>
+        </div>
+        
+        <div class="setting-group">
+          <label class="setting-label">📏 Formato Relazione</label>
+          <select id="reportFormat" class="setting-select">
+            <option value="complete">Completo (dettagliato con tabelle)</option>
+            <option value="brief">Sintetico (nota narrativa per database)</option>
           </select>
         </div>
         
@@ -646,6 +651,12 @@ Alla visita: ..."></textarea>
         <span>✨ Genera Relazione con AI</span>
       </button>
       <div class="cost-estimate" id="costEstimate"></div>
+      
+      <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #e2e8f0;">
+        <div style="font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 12px;">🧪 Test rapido:</div>
+        <button class="btn-secondary" onclick="loadObstetricExample()">Esempio Ostetrico</button>
+        <button class="btn-secondary" onclick="loadGynecologicExample()">Esempio Ginecologico</button>
+      </div>
     </div>
     
     <div class="output-container">
@@ -663,14 +674,14 @@ Alla visita: ..."></textarea>
           <div class="empty-state">
             <div class="empty-state-icon">🤖</div>
             <div><strong>Pronto all'uso!</strong> Incolla i dati e genera la relazione</div>
-            <div style="margin-top: 12px; font-size: 13px;">La relazione sarà modificabile direttamente qui</div>
+            <div style="margin-top: 12px; font-size: 13px;">Scegli tra formato <strong>Completo</strong> o <strong>Sintetico</strong></div>
           </div>
         </div>
         
         <div class="loader" id="loader">
           <div class="spinner"></div>
           <div>Claude sta generando la relazione...</div>
-          <div style="font-size: 12px; color: #94a3b8; margin-top: 8px;">Circa 5-10 secondi</div>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 8px;">Circa 5-15 secondi</div>
         </div>
       </div>
     </div>
@@ -685,89 +696,130 @@ Alla visita: ..."></textarea>
 const API_URL = '/api/generate';
 
 function toggleSettings() {
-  document.getElementById('settingsContent').classList.toggle('collapsed');
-  document.getElementById('settingsToggle').classList.toggle('collapsed');
+  const content = document.getElementById('settingsContent');
+  const toggle = document.getElementById('settingsToggle');
+  content.classList.toggle('collapsed');
+  toggle.classList.toggle('collapsed');
 }
 
 function updateCustomHeader() {
-  const visible = document.getElementById('headerType').value === 'custom';
-  document.getElementById('customHeaderGroup').style.display = visible ? 'block' : 'none';
+  const headerType = document.getElementById('headerType').value;
+  const customGroup = document.getElementById('customHeaderGroup');
+  customGroup.style.display = headerType === 'custom' ? 'block' : 'none';
 }
 
-function getHeader() {
-  const type = document.getElementById('headerType').value;
+function getHeaderConfig() {
+  const headerType = document.getElementById('headerType').value;
   const headers = {
-    gemelli: { institution: 'Fondazione Policlinico Universitario Agostino Gemelli IRCCS', department: 'Dipartimento di Ostetricia e Ginecologia' },
-    balduina: { institution: 'Balduina Medica', department: 'Ambulatorio di Ostetricia e Ginecologia' },
-    apollodoro: { institution: 'Poliambulatorio Apollodoro', department: 'Servizio di Ginecologia e Ostetricia' },
-    itor: { institution: 'Nuova Itor Casa di Cura', department: 'Reparto di Ostetricia e Ginecologia' }
+    gemelli: {
+      institution: 'Fondazione Policlinico Universitario Agostino Gemelli IRCCS',
+      department: 'Dipartimento di Ostetricia e Ginecologia'
+    },
+    balduina: {
+      institution: 'Balduina Medica',
+      department: ''
+    },
+    apollodoro: {
+      institution: 'Poliambulatorio Apollodoro',
+      department: ''
+    },
+    itor: {
+      institution: 'Nuova Itor Casa di Cura',
+      department: 'U.O. Ostetricia e Ginecologia'
+    },
+    custom: {
+      institution: '',
+      department: ''
+    }
   };
   
-  if (type === 'custom') {
-    const lines = document.getElementById('customHeader').value.trim().split('\n').filter(l => l.trim());
-    return { institution: lines[0] || 'Struttura Sanitaria', department: lines[1] || '' };
+  if (headerType === 'custom') {
+    const customText = document.getElementById('customHeader').value.trim();
+    const lines = customText.split('\n');
+    return {
+      institution: lines[0] || '',
+      department: lines[1] || ''
+    };
   }
   
-  return headers[type];
+  return headers[headerType];
+}
+
+function getCurrentDate() {
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2, '0');
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const yyyy = today.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
 }
 
 async function generateReport() {
-  const cartella = document.getElementById('inputData').value.trim();
+  const inputData = document.getElementById('inputData').value.trim();
+  const reportType = document.getElementById('reportType').value;
+  const reportFormat = document.getElementById('reportFormat').value;
+  const doctorName = document.getElementById('doctorName').value.trim();
   
-  if (!cartella) {
-    showToast('⚠️ Incolla prima i dati della cartella', 'error');
+  if (!inputData) {
+    showToast('⚠️ Inserisci i dati della cartella', 'error');
     return;
   }
   
-  document.getElementById('loader').classList.add('active');
-  document.getElementById('previewFrame').style.display = 'none';
-  document.getElementById('generateBtn').disabled = true;
+  const header = getHeaderConfig();
+  const oggi = getCurrentDate();
+  
+  const loader = document.getElementById('loader');
+  const btn = document.getElementById('generateBtn');
+  const preview = document.getElementById('previewFrame');
+  
+  loader.classList.add('active');
+  btn.disabled = true;
+  preview.innerHTML = '';
   
   try {
-    const res = await fetch(API_URL, {
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        cartella,
-        reportType: document.getElementById('reportType').value,
-        header: getHeader(),
-        doctorName: document.getElementById('doctorName').value.trim() || 'Medico Responsabile',
-        oggi: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        cartella: inputData,
+        reportType,
+        reportFormat,
+        header,
+        doctorName,
+        oggi
       })
     });
     
-    const data = await res.json();
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Errore generazione');
+    }
     
-    if (!res.ok) throw new Error(data.error || 'Errore generazione');
+    const data = await response.json();
     
-    const frame = document.getElementById('previewFrame');
-    frame.innerHTML = data.html + '<div class="edit-badge">✏️ Modificabile</div>';
-    frame.style.display = 'block';
-    frame.setAttribute('contenteditable', 'true');
+    preview.innerHTML = data.html;
+    preview.setAttribute('contenteditable', 'true');
     
-    document.getElementById('loader').classList.remove('active');
+    const editBadge = document.createElement('div');
+    editBadge.className = 'edit-badge';
+    editBadge.textContent = 'Modificabile';
+    preview.appendChild(editBadge);
+    
     document.getElementById('outputActions').style.display = 'flex';
-    document.getElementById('generateBtn').disabled = false;
+    
+    const formatLabel = reportFormat === 'brief' ? 'sintetica' : 'completa';
+    showToast(`✅ Relazione ${formatLabel} generata!`);
     
     if (data.usage) {
       document.getElementById('costEstimate').textContent = 
-        `Token: ${data.usage.inputTokens} + ${data.usage.outputTokens} • Costo: ~$${data.usage.cost}`;
+        `📊 Token: ${data.usage.inputTokens} input + ${data.usage.outputTokens} output | Costo: ~$${data.usage.cost}`;
     }
     
-    showToast('✅ Relazione generata! Puoi modificarla');
-    
   } catch (err) {
-    document.getElementById('loader').classList.remove('active');
-    document.getElementById('previewFrame').style.display = 'block';
-    document.getElementById('previewFrame').innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">❌</div>
-        <div style="color: #ef4444; font-weight: 600;">Errore</div>
-        <div style="font-size: 13px; color: #94a3b8; margin-top: 12px;">${err.message}</div>
-      </div>
-    `;
-    document.getElementById('generateBtn').disabled = false;
+    preview.innerHTML = `<div class="empty-state"><div class="empty-state-icon">❌</div><div>${err.message}</div></div>`;
     showToast('❌ ' + err.message, 'error');
+  } finally {
+    loader.classList.remove('active');
+    btn.disabled = false;
   }
 }
 
@@ -804,18 +856,14 @@ function copyText() {
     return;
   }
   
-  // Crea una copia temporanea per elaborazione
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = report.innerHTML;
   
-  // Rimuovi elementi non necessari
   const editBadge = tempDiv.querySelector('.edit-badge');
   if (editBadge) editBadge.remove();
   
-  // Converti HTML in testo formattato
   let text = '';
   
-  // Processa ogni elemento
   const processNode = (node, indent = '') => {
     if (node.nodeType === Node.TEXT_NODE) {
       const content = node.textContent.trim();
@@ -827,7 +875,6 @@ function copyText() {
     
     const tag = node.tagName.toLowerCase();
     
-    // Titoli e sezioni
     if (tag === 'h1' || tag === 'h2') {
       text += '\n\n' + node.textContent.toUpperCase() + '\n';
       return;
@@ -838,13 +885,11 @@ function copyText() {
       return;
     }
     
-    // Paragrafi
     if (tag === 'p') {
       text += '\n' + node.textContent.trim() + '\n';
       return;
     }
     
-    // Liste
     if (tag === 'li') {
       text += '\n  • ' + node.textContent.trim();
       return;
@@ -857,7 +902,6 @@ function copyText() {
       return;
     }
     
-    // Tabelle
     if (tag === 'table') {
       text += '\n\n[TABELLA]\n';
       const rows = node.querySelectorAll('tr');
@@ -870,9 +914,7 @@ function copyText() {
       return;
     }
     
-    // Div e altri contenitori
     if (tag === 'div') {
-      // Casi speciali per div con classi specifiche
       if (node.classList.contains('report-title')) {
         text += '\n\n═══ ' + node.textContent.toUpperCase() + ' ═══\n';
         return;
@@ -881,36 +923,30 @@ function copyText() {
         text += '\n\n▸ PAZIENTE: ' + node.textContent.toUpperCase() + '\n';
         return;
       }
-      // Altrimenti processa i figli
       node.childNodes.forEach(child => processNode(child, indent));
       return;
     }
     
-    // Break
     if (tag === 'br') {
       text += '\n';
       return;
     }
     
-    // Strong/Bold - aggiungi grassetto con maiuscole
     if (tag === 'strong' || tag === 'b') {
       text += node.textContent.toUpperCase() + ' ';
       return;
     }
     
-    // Default: processa figli
     node.childNodes.forEach(child => processNode(child, indent));
   };
   
   processNode(tempDiv);
   
-  // Pulizia finale
   text = text
-    .replace(/\n{3,}/g, '\n\n')  // Max 2 newline consecutive
-    .replace(/[ ]{2,}/g, ' ')    // Max 1 spazio consecutivo
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ ]{2,}/g, ' ')
     .trim();
   
-  // Copia negli appunti
   navigator.clipboard.writeText(text).then(() => {
     showToast('✅ Testo copiato! Incolla in Word/Docs');
   }).catch(() => {
@@ -923,73 +959,75 @@ function clearAll() {
   document.getElementById('previewFrame').innerHTML = `
     <div class="empty-state">
       <div class="empty-state-icon">🤖</div>
-      <div><strong>Pronto!</strong> Incolla i dati e genera la relazione</div>
+      <div><strong>Pronto all'uso!</strong> Incolla i dati e genera la relazione</div>
+      <div style="margin-top: 12px; font-size: 13px;">Scegli tra formato <strong>Completo</strong> o <strong>Sintetico</strong></div>
     </div>
   `;
   document.getElementById('previewFrame').setAttribute('contenteditable', 'false');
   document.getElementById('outputActions').style.display = 'none';
   document.getElementById('costEstimate').textContent = '';
+  showToast('🔄 Reset completato');
 }
 
-function showToast(msg, type = 'info') {
+function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.className = 'toast show';
-  if (type === 'error') toast.classList.add('error');
-  setTimeout(() => toast.classList.remove('show'), 4000);
+  toast.textContent = message;
+  toast.className = 'toast show' + (type === 'error' ? ' error' : '');
+  setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-window.loadObstetric = function() {
+function loadObstetricExample() {
   document.getElementById('reportType').value = 'obstetric';
-  document.getElementById('inputData').value = `Sig.ra: LUDOVICA  FERRI
+  document.getElementById('inputData').value = `Sig.ra: LUDOVICA FERRI
 Anni: 36
 Gravida: 1
 Para: 0
 U.M.: 11/06/2025
 D.P.P.: 18/03/2026
 IMC: 19 normopeso
+Fumo: Smesso
 Gruppo: 0 NEGATIVO
-Malattie personali: lieve irregolarità mestruale. marito Rh pos
+Malattie personali: lieve irregolarità mestruale (10 gg di ritardo). marito Rh pos
 Malattie in famiglia: mamma k ovaio
 Interventi chirurgici: resezione polipo nel 2021
-Farmaci assunti in gravidanza: Ac folico, Cardirene, Immunoglobuline anti Rh
-Note sulla gravidanza attuale: Biometria 13° pc`;
-  showToast('📋 Esempio ostetrico caricato');
-};
+Farmaci: Ac folico, Cardirene, Immunoglobuline anti Rh
 
-window.loadGynecologic = function() {
+Screening (02/08/2025):
+Rosolia: Protetta (IgG+ IgM-)
+Toxo: Non prot. (IgG- IgM-)
+CMV: Non prot. (IgG- IgM-)
+Varicella: protetta
+
+Monitoraggio ematochimico:
+Data 02/02/2026 - 34 sett - Hb 10.9 - Plt 220 - Glic 79 - Fibr 519 - Tap 108 - Inr 0.95 - Ptt 24
+Data 09/01/2026 - 30 sett - Hb 11.4 - Plt 219 - Fibr 483 - Tap 109 - Inr 0.95 - Ptt 29 - TSH 3.04 FT4 0.67
+Data 01/12/2025 - 25 sett - Hb 12.6 - Plt 204 - OGTT 80-133-116
+
+Esami ecografici:
+23/01/2026 - 32 sett - Presentazione cefalica - Peso 1584g (13° percentile) - Placenta anteriore - Doppler a.uterine ai limiti superiori
+02/01/2026 - 29 sett - Peso 1186g (21° percentile) - Doppler a.uterine ai limiti superiori - Alterati
+11/12/2025 - 26 sett - Peso 811g (49° percentile)`;
+  showToast('📝 Esempio ostetrico caricato');
+}
+
+function loadGynecologicExample() {
   document.getElementById('reportType').value = 'gynecologic';
-  document.getElementById('inputData').value = `Anni 30
-UM. 22/01/2026
-Note anamnestiche: cicli regolari, parità 0/0/0/0; vaccinata per HPV
-Motivo della visita: controllo
+  document.getElementById('inputData').value = `Anni: 30
+U.M.: 22/01/2026
+Note anamnestiche: cicli regolari 28/4, parità 0/0/0/0, ultima visita 1 anno fa
+Gruppo sanguigno: A positivo
+Allergie: nega
+Motivo della visita: controllo routinario
 
-Alla visita: 
-- utero di volume normale, annessi non palpabili
-- cervice appare iperemica e facilmente sanguinante circondata da leucorrea giallastra abbondante
-- effettuato PAP test
-- non si palpano noduli mammari; assenza di secrezione provocata
+Alla visita:
+Esame speculare: cervice trofiche, leucorrea assente
+Esame bimanuale: utero mobile, annessi liberi
+Ecografia office: endometrio 5mm trilaminare, ovaio dx con follicolo 18mm, ovaio sx con corpo luteo, Douglas libero
 
-Eseguita Ecografia di supporto (office):
-- endometrio trilaminare secretivo mm 7,6
-- non evidenza di alterazioni in sede annessiale
-- Douglas virtuale
-
-Si prescrive:
-- Terapia allegata (Crispact)`;
-  showToast('📋 Esempio ginecologico caricato');
-};
+Prescrizioni: continuare controlli annuali, consigliato PAP test`;
+  showToast('📝 Esempio ginecologico caricato');
+}
 </script>
-
-<div style="text-align: center; color: rgba(255,255,255,0.85); margin-top: 24px; font-size: 13px;">
-  <strong>Test rapido:</strong> 
-  <a href="javascript:loadObstetric()" style="color: white; text-decoration: underline; margin: 0 12px;">Esempio Ostetrico</a> | 
-  <a href="javascript:loadGynecologic()" style="color: white; text-decoration: underline; margin: 0 12px;">Esempio Ginecologico</a>
-</div>
-
-<div style="text-align: center; color: rgba(255,255,255,0.7); margin-top: 12px; font-size: 12px;">
-  Deploy su Netlify • Accessibile ovunque • API key sicura
-</div>
 
 </body>
 </html>
