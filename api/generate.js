@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // VERCEL SERVERLESS FUNCTION - Genera Relazioni Cliniche
-// Formato corretto per Vercel (non Netlify!)
+// Con supporto per formato COMPLETO e SINTETICO
 // ═══════════════════════════════════════════════════════════════
 
 const fetch = require('node-fetch');
@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
   
   try {
     // Parse request body
-    const { cartella, reportType, header, doctorName, oggi } = req.body;
+    const { cartella, reportType, reportFormat, header, doctorName, oggi } = req.body;
     
     // Get API key from environment variable
     const API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -39,18 +39,28 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Dati cartella mancanti' });
     }
     
-    // Build prompts
-    const systemPrompt = reportType === 'obstetric' 
-      ? getObstetricPrompt(header, doctorName, oggi)
-      : getGynecologicPrompt(header, doctorName, oggi);
+    // Default a formato completo se non specificato
+    const format = reportFormat || 'complete';
+    
+    // Build prompts based on type and format
+    let systemPrompt;
+    if (reportType === 'obstetric') {
+      systemPrompt = format === 'brief' 
+        ? getBriefObstetricPrompt(header, doctorName, oggi)
+        : getCompleteObstetricPrompt(header, doctorName, oggi);
+    } else {
+      systemPrompt = format === 'brief'
+        ? getBriefGynecologicPrompt(header, doctorName, oggi)
+        : getCompleteGynecologicPrompt(header, doctorName, oggi);
+    }
     
     const userPrompt = `Ecco i dati della cartella clinica:
 
 ${cartella}
 
-Genera una relazione clinica professionale completa seguendo esattamente lo schema e lo stile indicato nel system prompt.`;
+Genera una relazione clinica professionale ${format === 'brief' ? 'SINTETICA in forma narrativa' : 'completa'} seguendo esattamente lo schema e lo stile indicato nel system prompt.`;
 
-    console.log(`📝 Generazione relazione ${reportType}...`);
+    console.log(`📝 Generazione relazione ${reportType} - formato ${format}...`);
     
     // Call Claude API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -62,7 +72,7 @@ Genera una relazione clinica professionale completa seguendo esattamente lo sche
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
+        max_tokens: format === 'brief' ? 2000 : 4000,  // Meno token per formato breve
         messages: [{
           role: 'user',
           content: userPrompt
@@ -105,11 +115,11 @@ Genera una relazione clinica professionale completa seguendo esattamente lo sche
 };
 
 // ═══════════════════════════════════════════════════════════════
-// PROMPT TEMPLATES
+// PROMPT TEMPLATES - FORMATO COMPLETO
 // ═══════════════════════════════════════════════════════════════
 
-function getObstetricPrompt(header, doctorName, oggi) {
-  return `Sei un assistente specializzato nella generazione di relazioni cliniche ostetriche professionali.
+function getCompleteObstetricPrompt(header, doctorName, oggi) {
+  return `Sei un assistente specializzato nella generazione di relazioni cliniche ostetriche professionali COMPLETE E DETTAGLIATE.
 
 INTESTAZIONE DA UTILIZZARE:
 Istituzione: ${header.institution}
@@ -123,7 +133,7 @@ ${oggi}
 
 ISTRUZIONI:
 1. Analizza i dati forniti dalla cartella clinica
-2. Genera una relazione narrativa completa in HTML
+2. Genera una relazione narrativa COMPLETA E DETTAGLIATA in HTML
 3. Usa esattamente questo formato HTML:
 
 <div class="report">
@@ -141,24 +151,24 @@ ISTRUZIONI:
   <div class="patient-card">
     <div class="patient-name">Sig.ra [NOME]</div>
     <div class="patient-grid">
-      [CAMPI ANAGRAFICA IN FORMATO PATIENT-FIELD]
+      [CAMPI ANAGRAFICA]
     </div>
   </div>
   
   <h2>Anamnesi</h2>
-  [PARAGRAFI NARRATIVI]
+  [PARAGRAFI NARRATIVI DETTAGLIATI]
   
   <h2>Screening serologico e indagini</h2>
-  [PARAGRAFI NARRATIVI]
+  [ELENCO COMPLETO]
   
   <h2>Monitoraggio ematochimico</h2>
-  [TABELLA SE PRESENTE]
+  [TABELLA HTML CON TUTTI I DATI]
   
   <h2>Esami ecografici</h2>
-  [NARRATIVA ECOGRAFICA]
+  [NARRATIVA COMPLETA CON EVOLUZIONE]
   
   <h2>Valutazione clinica</h2>
-  [ANALISI DETTAGLIATA CON SOTTOSEZIONI H3 PER OGNI PROBLEMA CLINICO]
+  [ANALISI DETTAGLIATA CON H3 PER OGNI PROBLEMA]
   
   <h2>Piano di proseguimento</h2>
   [PIANO DETTAGLIATO]
@@ -175,20 +185,19 @@ ISTRUZIONI:
   </div>
 </div>
 
-REGOLE IMPORTANTI:
+REGOLE:
 - Calcola le settimane gestazionali dalla U.M.
-- Interpreta i dati clinici (es. SGA se percentile basso, problemi se flussi alterati, ecc.)
-- Genera narrativa professionale e dettagliata
-- Usa <strong> per enfatizzare termini clinici importanti
-- Crea tabelle HTML per dati ematochimici con classe "report-table"
-- Usa <h3> per sottosezioni della valutazione clinica
-- Identifica fattori di rischio e commentali in dettaglio
-- Non inventare dati: usa solo ciò che è fornito
-- Restituisci SOLO l'HTML della relazione, niente altro`;
+- Interpreta i dati clinici
+- Genera narrativa professionale DETTAGLIATA
+- Usa <strong> per termini importanti
+- Crea tabelle HTML per dati ematochimici
+- Usa <h3> per sottosezioni
+- Non inventare dati
+- Restituisci SOLO l'HTML`;
 }
 
-function getGynecologicPrompt(header, doctorName, oggi) {
-  return `Sei un assistente specializzato nella generazione di relazioni cliniche ginecologiche professionali.
+function getCompleteGynecologicPrompt(header, doctorName, oggi) {
+  return `Sei un assistente specializzato nella generazione di relazioni cliniche ginecologiche professionali COMPLETE.
 
 INTESTAZIONE DA UTILIZZARE:
 Istituzione: ${header.institution}
@@ -201,9 +210,39 @@ DATA DELLA VISITA:
 ${oggi}
 
 ISTRUZIONI:
-1. Analizza i dati forniti dalla visita ginecologica
-2. Genera una relazione narrativa completa in HTML
-3. Usa esattamente questo formato HTML:
+Genera una relazione ginecologica COMPLETA E DETTAGLIATA seguendo la struttura standard con tutte le sezioni.
+
+Usa lo stesso formato HTML della relazione ostetrica ma adattato per visita ginecologica.
+
+Restituisci SOLO l'HTML.`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PROMPT TEMPLATES - FORMATO SINTETICO  
+// ═══════════════════════════════════════════════════════════════
+
+function getBriefObstetricPrompt(header, doctorName, oggi) {
+  return `Sei un assistente specializzato nella generazione di NOTE CLINICHE SINTETICHE per database ospedaliero.
+
+INTESTAZIONE DA UTILIZZARE:
+Istituzione: ${header.institution}
+${header.department ? `Dipartimento: ${header.department}` : ''}
+
+FIRMA FINALE:
+${doctorName}
+
+DATA DELLA VISITA:
+${oggi}
+
+FORMATO RICHIESTO: NOTA CLINICA SINTETICA
+
+ISTRUZIONI:
+1. Genera una relazione in formato NARRATIVO BREVE (~300-400 parole)
+2. Stile: Nota clinica per database ospedaliero
+3. NO tabelle, NO sezioni separate con H2
+4. Tutto in PARAGRAFI NARRATIVI fluidi
+
+STRUTTURA HTML:
 
 <div class="report">
   <div class="report-header">
@@ -214,59 +253,68 @@ ISTRUZIONI:
     <div class="report-date">Visita:<br><strong>${oggi}</strong></div>
   </div>
   
-  <div class="report-title">Relazione Visita Ginecologica</div>
-  <div class="report-subtitle">Visita Ambulatoriale</div>
+  <div class="report-title">Nota Clinica</div>
+  <div class="report-subtitle">Visita Ostetrica — [SETTIMANE]^ Settimana</div>
   
-  <div class="patient-card">
-    <div class="patient-name">Paziente di [ETÀ] anni</div>
-    <div class="patient-grid">
-      [CAMPI RILEVANTI: età, U.M., parità, cicli, vaccinazioni, ecc.]
-    </div>
-  </div>
+  <p><strong>Paziente:</strong> [Nome], [età] anni, [gravida/para] alla [sett]^ settimana gestazionale (U.M. [data], D.P.P. [data]).</p>
   
-  <h2>Motivo della visita</h2>
-  <p>[MOTIVO]</p>
+  <p><strong>Anamnesi rilevante:</strong> [Paragrafo narrativo con: gruppo sanguigno, allergie, familiarità, fumo, IMC, patologie, interventi, farmaci in gravidanza].</p>
   
-  <h2>Anamnesi</h2>
-  <p>[ANAMNESI GINECOLOGICA E NOTE ANAMNESTICHE]</p>
+  <p><strong>Screening e profilassi:</strong> [Paragrafo narrativo con: rosolia, toxo, CMV, screening genetici, tiroide, diabete, terapie].</p>
   
-  <h2>Esame obiettivo ginecologico</h2>
-  <h3>Ispezione e palpazione</h3>
-  <p>[DESCRIZIONE DETTAGLIATA]</p>
+  <p><strong>Decorso gravidico:</strong> [Paragrafo narrativo con ultimi esami ematochimici più rilevanti, senza tabelle].</p>
   
-  <h3>Esame speculare</h3>
-  <p>[DESCRIZIONE CERVICE, LEUCORREA, ECC.]</p>
+  <p><strong>Valutazione ecografica:</strong> [Paragrafo narrativo con: crescita fetale, percentile, evoluzione, doppler, LA, placenta, presentazione. Focalizza su problemi se presenti].</p>
   
-  <h3>Esame mammario</h3>
-  <p>[SE PRESENTE]</p>
-  
-  <h2>Ecografia ginecologica (office)</h2>
-  <p>Eseguita ecografia di supporto finalizzata alla ricerca di dati utili al completamento della visita:</p>
-  <p>[DESCRIZIONE ENDOMETRIO, ANNESSI, DOUGLAS, ECC.]</p>
-  
-  <h2>Conclusioni e prescrizioni</h2>
-  <p>[DIAGNOSI / IMPRESSIONE CLINICA]</p>
-  <p><strong>Terapia prescritta:</strong> [ELENCO FARMACI / INDICAZIONI]</p>
+  <p><strong>Conclusioni:</strong> [Diagnosi/problemi principali]. [Piano di controlli e terapia].</p>
   
   <div class="signature-block">
     <div>
       <div class="signature-line" style="width: 260px;"></div>
-      <div class="signature-label">Firma del Medico Responsabile<br>${doctorName}</div>
-    </div>
-    <div style="text-align: right;">
-      <div class="signature-line" style="width: 160px;"></div>
-      <div class="signature-label">Data: ${oggi}</div>
+      <div class="signature-label">${doctorName}</div>
     </div>
   </div>
 </div>
 
-REGOLE IMPORTANTI:
-- Mantieni tono professionale ma leggibile
-- Organizza i reperti in modo logico e sistematico
-- Interpreta i dati clinici forniti
-- Usa <strong> per enfatizzare termini clinici importanti
-- Non inventare dati: usa solo ciò che è fornito
-- Se PAP test eseguito, menzionarlo
-- Se terapia prescritta, elencarla chiaramente
-- Restituisci SOLO l'HTML della relazione, niente altro`;
+REGOLE FONDAMENTALI:
+- LUNGHEZZA: 300-400 parole totali
+- FORMATO: Solo paragrafi narrativi, NO liste, NO tabelle
+- STILE: Nota clinica sintetica e scorrevole
+- FOCUS: Problema principale + dati essenziali
+- Usa <strong> solo per etichette ("Paziente:", "Anamnesi rilevante:", ecc.)
+- Restituisci SOLO l'HTML`;
+}
+
+function getBriefGynecologicPrompt(header, doctorName, oggi) {
+  return `Sei un assistente specializzato nella generazione di NOTE CLINICHE SINTETICHE ginecologiche.
+
+INTESTAZIONE DA UTILIZZARE:
+Istituzione: ${header.institution}
+${header.department ? `Dipartimento: ${header.department}` : ''}
+
+FIRMA FINALE:
+${doctorName}
+
+DATA DELLA VISITA:
+${oggi}
+
+FORMATO: NOTA CLINICA SINTETICA (~300 parole)
+
+Genera una nota clinica narrativa BREVE in formato paragrafi, senza tabelle né sezioni H2 separate.
+
+Struttura:
+<div class="report">
+  [header come ostetrica]
+  <div class="report-title">Nota Clinica - Visita Ginecologica</div>
+  
+  <p><strong>Paziente:</strong> [età] anni. <strong>Motivo:</strong> [motivo visita].</p>
+  <p><strong>Anamnesi:</strong> [U.M., cicli, parità, anamnesi rilevante].</p>
+  <p><strong>Esame obiettivo:</strong> [Ispezione, esame speculare, esame bimanuale].</p>
+  <p><strong>Ecografia office:</strong> [Reperti ecografici se eseguita].</p>
+  <p><strong>Conclusioni e prescrizioni:</strong> [Diagnosi, terapia, follow-up].</p>
+  
+  [firma]
+</div>
+
+Restituisci SOLO l'HTML.`;
 }
