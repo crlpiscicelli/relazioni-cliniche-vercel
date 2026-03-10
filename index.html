@@ -97,9 +97,9 @@
   }
   
   .settings-content {
-    max-height: 500px;
-    overflow: hidden;
-    transition: max-height 0.3s ease-out;
+    max-height: 1200px;
+    overflow: visible;
+    transition: max-height 0.4s ease-out;
   }
   
   .settings-content.collapsed {
@@ -653,7 +653,7 @@
           </select>
         </div>
         
-        <div class="setting-group">
+        <div class="setting-group" id="headerGroup">
           <label class="setting-label">🏛️ Intestazione</label>
           <select id="headerType" class="setting-select" onchange="updateCustomHeader()">
             <option value="gemelli">Gemelli IRCCS</option>
@@ -669,12 +669,12 @@
           <textarea id="customHeader" class="setting-textarea" placeholder="Istituzione&#10;Dipartimento / Reparto (opzionale)"></textarea>
         </div>
         
-        <div class="setting-group">
+        <div class="setting-group" id="doctorNameGroup">
           <label class="setting-label">👨‍⚕️ Nome Medico / Chirurgo</label>
           <input type="text" id="doctorName" class="setting-input" placeholder="Dott. Carlo Piscicelli" value="Dott. Carlo Piscicelli">
         </div>
 
-        <div class="setting-group" style="grid-column: 1 / -1;">
+        <div class="setting-group" id="qualificaGroup" style="grid-column: 1 / -1;">
           <label class="setting-label">🎓 Qualifica / Titolo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(appare nella firma — facoltativo)</span></label>
           <textarea id="doctorQualifica" class="setting-textarea" placeholder="Specialista in Ostetricia e Ginecologia&#10;Senior Consultant — UOC Ostetricia e Ginecologia" style="min-height:58px;"></textarea>
         </div>
@@ -893,18 +893,34 @@ function onReportTypeChange() {
   const formatGroup = document.getElementById('formatGroup');
   const inputTitle = document.getElementById('inputPanelTitle');
   const btnLabel = document.getElementById('generateBtnLabel');
+  const headerGroup = document.getElementById('headerGroup');
+  const customHeaderGroup = document.getElementById('customHeaderGroup');
+  const doctorNameGroup = document.getElementById('doctorNameGroup');
+  const qualificaGroup = document.getElementById('qualificaGroup');
 
-  if (reportType === 'surgical') {
-    surgicalFields.style.display = 'block';
-    if (formatGroup) formatGroup.style.display = 'none';
+  const isSurgical = reportType === 'surgical';
+
+  surgicalFields.style.display = isSurgical ? 'block' : 'none';
+  if (formatGroup) formatGroup.style.display = isSurgical ? 'none' : '';
+
+  // Nascondi intestazione, nome e qualifica per registro operatorio
+  headerGroup.style.display       = isSurgical ? 'none' : '';
+  doctorNameGroup.style.display   = isSurgical ? 'none' : '';
+  qualificaGroup.style.display    = isSurgical ? 'none' : '';
+  if (customHeaderGroup && !isSurgical) {
+    // mantieni visibilità customHeaderGroup solo se headerType = custom
+    const ht = document.getElementById('headerType').value;
+    customHeaderGroup.style.display = ht === 'custom' ? 'block' : 'none';
+  } else if (customHeaderGroup && isSurgical) {
+    customHeaderGroup.style.display = 'none';
+  }
+
+  if (isSurgical) {
     inputTitle.textContent = '🔪 Dati Intervento';
     btnLabel.textContent = '✨ Genera Verbale Operatorio';
   } else {
-    surgicalFields.style.display = 'none';
-    if (formatGroup) formatGroup.style.display = '';
     inputTitle.textContent = '📋 Dati Cartella Clinica';
     btnLabel.textContent = '✨ Genera Relazione con AI';
-    // reset chips
     document.querySelectorAll('.access-chip.active').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.patologia-chip.active').forEach(c => c.classList.remove('active'));
   }
