@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
   
   try {
     // Parse request body
-    const { cartella, reportType, reportFormat, header, doctorName, doctorQualifica, oggi, tipoAccesso, tipoIntervento, problematiche } = req.body;
+    const { cartella, reportType, reportFormat, header, doctorName, doctorQualifica, oggi, tipoAccesso, tipoIntervento, problematiche, surgicalFormat } = req.body;
     
     // Get API key from environment variable
     const API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
     let userPrompt;
 
     if (reportType === 'surgical') {
-      systemPrompt = getSurgicalReportPrompt(header, doctorName, doctorQualifica, oggi, tipoAccesso, tipoIntervento, problematiche);
+      systemPrompt = getSurgicalReportPrompt(header, doctorName, doctorQualifica, oggi, tipoAccesso, tipoIntervento, problematiche, surgicalFormat);
       userPrompt = `Ecco i dati dell'intervento da registrare:\n\n${cartella}\n\nGenera il verbale operatorio completo seguendo esattamente lo schema e lo stile indicato nel system prompt. Ricorda: sei il chirurgo che scrive il registro operatorio.`;
     } else if (reportType === 'obstetric') {
       systemPrompt = format === 'brief'
@@ -324,12 +324,13 @@ Restituisci SOLO l'HTML.`;
 // PROMPT TEMPLATE - REGISTRO OPERATORIO
 // ═══════════════════════════════════════════════════════════════
 
-function getSurgicalReportPrompt(header, doctorName, doctorQualifica, oggi, tipoAccesso, tipoIntervento, problematiche) {
+function getSurgicalReportPrompt(header, doctorName, doctorQualifica, oggi, tipoAccesso, tipoIntervento, problematiche, surgicalFormat) {
   // tipoAccesso e tipoIntervento possono essere stringhe tipo "isteroscopico + laparoscopico"
   const accessiList = (tipoAccesso || 'isteroscopico').split(' + ').map(s => s.trim()).filter(Boolean);
   const interventoLabel = tipoIntervento || '';
   const prob = problematiche ? `\nProblematiche aggiuntive / note: ${problematiche}` : '';
   const isMultiAccesso = accessiList.length > 1;
+  const isBrief = surgicalFormat === 'brief';
 
   // Tecniche standard per accesso
   const tecnicheStandard = {
@@ -454,6 +455,7 @@ CONTESTO:
 - Via/e di accesso: ${accessoLabel}${isMultiAccesso ? ' (intervento combinato)' : ''}
 - Patologia/intervento: ${interventoLabel || '(vedi dati forniti)'}${prob}
 - Data intervento: ${oggi}
+- Formato richiesto: ${isBrief ? 'SINTETICO (testo continuo, no paragrafi separati)' : 'DETTAGLIATO (con sezioni H3)'}
 
 OBIETTIVO:
 Genera SOLO il testo narrativo della descrizione chirurgica, pronto da incollare nel registro operatorio già predisposto (che contiene già nomi, anestesia, dati paziente). Non ripetere queste informazioni nell'output.
@@ -505,14 +507,22 @@ ASPETTO MACROSCOPICO DEL CONTENUTO (se descritto):
 
 ═══════════════════════════════════════════════
 
-ISTRUZIONI OPERATIVE:
+${isBrief ? `ISTRUZIONI FORMATO SINTETICO:
+1. Genera un UNICO paragrafo di testo continuo (max 8-10 righe) — nessun titolo H3, nessuna lista
+2. Copri in sequenza: posizionamento/accesso → reperti → tecnica → emostasi → chiusura → decorso
+3. Usa frasi brevi collegate da punti e virgola o punti
+4. Tono: registro operatorio italiano ufficiale, verbi al passato
+5. Includi campione istologico solo se pertinente
+6. Applica comunque la logica morfologia→tecnica sopra descritta
+7. Nessun placeholder nell'output — usa la variante standard se mancano dati specifici` 
+: `ISTRUZIONI FORMATO DETTAGLIATO:
 1. Leggi i dati morfologici forniti (campo "Reperti / caratteristiche della patologia")
 2. Applica la logica clinica sopra per scegliere e descrivere la tecnica appropriata
 3. Integra questi dettagli nel testo narrativo in modo fluido e naturale — non come elenco, ma come descrizione chirurgica coerente
 4. ${isMultiAccesso ? 'Per l\'intervento combinato: descrivi le due fasi in sequenza logica, indicando chiaramente il passaggio da una fase all\'altra' : 'Descrivi ogni step con precisione chirurgica'}
 5. Tono: registro operatorio italiano ufficiale, verbi al passato ("si è proceduto", "è stata eseguita", "si è proceduto all'enucleazione")
 6. Struttura con sottotitoli H3
-7. Ogni sezione deve essere completa — NESSUN placeholder nell'output finale: se un dato non è fornito, usa la variante tecnica standard più appropriata per quel tipo di lesione
+7. Ogni sezione deve essere completa — NESSUN placeholder nell'output finale: se un dato non è fornito, usa la variante tecnica standard più appropriata per quel tipo di lesione`}
 
 OUTPUT HTML:
 
@@ -531,13 +541,15 @@ OUTPUT HTML:
     <strong>ℹ️ Testo da copiare nel registro operatorio</strong> — Dati paziente, equipe e anestesia sono già nel registro.
   </div>
 
-${strutturaHTML}
+${isBrief 
+  ? `  <p style="line-height:1.8;">[TESTO CONTINUO — un unico paragrafo narrativo completo]</p>`
+  : strutturaHTML + `
 
   <h3>Decorso intraoperatorio</h3>
   <p>[Decorso regolare / eventuali criticità. Perdita ematica stimata: ___ ml. Diuresi intraoperatoria: ___ ml.]</p>
 
   <h3>Campioni inviati all'esame istologico</h3>
-  <p>[Descrizione campione / "Nessun campione inviato"]</p>
+  <p>[Descrizione campione / "Nessun campione inviato"]</p>`}
 </div>
 
 REGOLA ASSOLUTA: Restituisci SOLO l'HTML, nessun testo fuori dai tag.`;
