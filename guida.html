@@ -618,9 +618,16 @@
       <a href="#faq"        class="nav-link"><span class="nav-icon">❓</span> Domande frequenti</a>
     </div>
 
+    <div class="nav-section">
+      <div class="nav-section-label">Deploy</div>
+      <a href="SETUP.md" target="_blank" class="nav-link"><span class="nav-icon">🔧</span> Configurazione servizi</a>
+      <a href="index.html" class="nav-link"><span class="nav-icon">🏠</span> Torna all'app</a>
+    </div>
+
     <div class="sidebar-footer">
-      Powered by Claude API<br>
-      Deploy su Vercel · Anthropic
+      Sviluppato da<br>
+      <strong style="color:#9898c8;">Dott. Carlo Piscicelli</strong><br>
+      Powered by Claude API · Vercel
     </div>
   </nav>
 
@@ -629,7 +636,7 @@
 
     <!-- HERO -->
     <div class="hero" id="intro">
-      <div class="hero-eyebrow">Documentazione · v3e</div>
+      <div class="hero-eyebrow">Documentazione · v3f</div>
       <h1 class="hero-title">Generatore<br><em>Relazioni Cliniche</em> AI</h1>
       <p class="hero-lead">
         Un assistente clinico intelligente che trasforma dati sintetici di cartella in relazioni professionali complete — visite ostetriche, ginecologiche e verbali operatori — pronte per la firma.
@@ -719,7 +726,22 @@
       <div class="section-eyebrow">Registro Operatorio</div>
       <h2 class="section-title"><span class="icon">🔪</span>Chips: accesso & patologia</h2>
 
-      <p>Selezionando la modalità <strong>Registro Operatorio</strong>, il pannello di configurazione espone due livelli di selezione a chips interattive. Il secondo livello si popola dinamicamente in base a ciò che selezioni nel primo.</p>
+      <p>Selezionando la modalità <strong>Registro Operatorio</strong>, il pannello di configurazione si semplifica: spariscono intestazione, nome medico e qualifica (già presenti nel registro di sala) e compaiono due livelli di selezione a chips interattive. Il secondo livello si popola dinamicamente in base a ciò che selezioni nel primo.</p>
+
+      <p>In cima ai parametri è disponibile anche il toggle <strong>Formato verbale</strong>:</p>
+
+      <div style="display:flex; gap:10px; margin:12px 0 20px; align-items:center;">
+        <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:8px;background:#764ba2;color:white;font-size:13px;font-weight:600;">📋 Dettagliato</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:8px;background:white;color:#94a3b8;border:2px solid #e2e8f0;font-size:13px;font-weight:600;">📝 Sintetico</span>
+      </div>
+
+      <div class="callout callout-info">
+        <span class="callout-icon">ℹ️</span>
+        <div class="callout-body">
+          <p><strong>Dettagliato</strong> — struttura con sezioni H3 (posizionamento, accesso, reperti, tecnica, emostasi, chiusura, decorso, campioni). Verbale completo e articolato.</p>
+          <p style="margin-top:6px;"><strong>Sintetico</strong> — unico paragrafo di testo continuo (~8–10 righe), senza titoli. Ideale per i registri operatori che non accettano testo strutturato o hanno un campo libero limitato.</p>
+        </div>
+      </div>
 
       <div class="chip-demo">
         <div class="chip-demo-label">Esempio — Isteroscopia operativa</div>
@@ -842,19 +864,34 @@
       <div class="section-eyebrow">Registro Operatorio</div>
       <h2 class="section-title"><span class="icon">📄</span>Output del verbale</h2>
 
-      <p>L'output è <strong>solo la descrizione narrativa</strong> dell'intervento — dati paziente, equipe e anestesia non vengono generati perché già presenti nel registro predisposto dalla sala operatoria.</p>
+      <p>L'output è <strong>solo la descrizione narrativa</strong> dell'intervento — nessuna intestazione, nessuna data, nessun titolo. Il testo inizia direttamente con un banner informativo e poi con il contenuto chirurgico, pronto da incollare nel registro già predisposto dalla sala operatoria.</p>
 
-      <p>Il verbale è strutturato nelle seguenti sezioni (H3), tutte complete e senza placeholder:</p>
+      <p>Il formato dell'output dipende dalla selezione del toggle:</p>
 
-      <div class="output-sections">
-        <div class="output-sec"><strong>Posizionamento e preparazione</strong>Litotomica / Trendelenburg, disinfezione, teli, catetere, manipolatore</div>
-        <div class="output-sec"><strong>Accesso chirurgico</strong>Speculum + Hegar, Veress + trocars, Pfannenstiel, ecc.</div>
-        <div class="output-sec"><strong>Esplorazione e reperti intraoperatori</strong>Caratteristiche della lesione, varianti anatomiche, aderenze</div>
-        <div class="output-sec"><strong>Tecnica operatoria</strong>2–4 paragrafi step-by-step, adattati alla morfologia</div>
-        <div class="output-sec"><strong>Emostasi e controllo finale</strong>Verifica di tutti i siti, coagulazione, lavaggio</div>
-        <div class="output-sec"><strong>Chiusura / Fine procedura</strong>Sutura per piani o rimozione strumento</div>
-        <div class="output-sec"><strong>Decorso intraoperatorio</strong>Decorso, complicanze, perdita ematica, diuresi</div>
-        <div class="output-sec"><strong>Campioni istologici</strong>Descrizione o assenza di campione</div>
+      <div class="format-grid">
+        <div class="format-card">
+          <div class="format-card-title">📋 Dettagliato <span class="format-tag tag-complete">con H3</span></div>
+          <ul>
+            <li>Posizionamento e preparazione</li>
+            <li>Accesso chirurgico</li>
+            <li>Esplorazione e reperti intraoperatori</li>
+            <li>Tecnica operatoria (2–4 paragrafi)</li>
+            <li>Emostasi e controllo finale</li>
+            <li>Chiusura / Fine procedura</li>
+            <li>Decorso intraoperatorio</li>
+            <li>Campioni istologici</li>
+          </ul>
+        </div>
+        <div class="format-card">
+          <div class="format-card-title">📝 Sintetico <span class="format-tag tag-brief">paragrafo unico</span></div>
+          <ul>
+            <li>Un solo paragrafo continuo</li>
+            <li>Nessun titolo H3</li>
+            <li>Sequenza: accesso → reperti → tecnica → emostasi → chiusura → decorso</li>
+            <li>Stesso contenuto clinico, formato compresso</li>
+            <li>Ideale per registri con campo libero limitato</li>
+          </ul>
+        </div>
       </div>
 
       <div class="callout callout-warn">
@@ -923,26 +960,31 @@
       <div class="section-eyebrow">Avanzato</div>
       <h2 class="section-title"><span class="icon">⚙️</span>Configurazione</h2>
 
-      <p>Il pannello <strong>Configurazione</strong> (collassabile) contiene le impostazioni persistenti per la sessione:</p>
+      <p>Il pannello <strong>Configurazione</strong> (collassabile) contiene le impostazioni persistenti per la sessione. I campi visibili cambiano dinamicamente in base al tipo di relazione selezionato.</p>
 
       <div class="faq-item">
         <div class="faq-q">📋 Tipo Relazione</div>
-        <p class="faq-a">Ostetrica · Ginecologica · Registro Operatorio. Cambiando il tipo si aggiornano dinamicamente i campi disponibili e l'interfaccia (il selettore Formato scompare in modalità chirurgica, compaiono le chips).</p>
+        <p class="faq-a">Ostetrica · Ginecologica · Registro Operatorio. Cambiando il tipo si aggiornano dinamicamente i campi: in modalità chirurgica spariscono intestazione, nome medico e qualifica (non necessari nel verbale), e compaiono le chips di accesso/patologia e il toggle formato.</p>
       </div>
 
       <div class="faq-item">
         <div class="faq-q">📏 Formato Relazione</div>
-        <p class="faq-a">Solo per modalità Ostetrica e Ginecologica. <em>Completo</em> genera la relazione standard con tabelle. <em>Sintetico</em> genera ~300 parole in forma narrativa per database.</p>
+        <p class="faq-a">Per Ostetrica e Ginecologica: <em>Completo</em> (relazione con tabelle) o <em>Sintetico</em> (~300 parole per database). Per Registro Operatorio: il selettore formato è sostituito dal toggle <em>Dettagliato / Sintetico</em> direttamente nei Parametri Intervento.</p>
       </div>
 
       <div class="faq-item">
         <div class="faq-q">🏛️ Intestazione</div>
-        <p class="faq-a">Quattro preset (Gemelli IRCCS, Balduina Medica, Apollodoro, Nuova Itor) + campo personalizzato. L'intestazione è inclusa nell'HTML generato.</p>
+        <p class="faq-a">Quattro preset (Gemelli, Balduina Medica, Apollodoro, Nuova Itor) + campo personalizzato. Inclusa nell'HTML delle relazioni Ostetrica e Ginecologica. <strong>Non appare nel Registro Operatorio</strong> — già presente nel modulo di sala.</p>
       </div>
 
       <div class="faq-item">
-        <div class="faq-q">👨‍⚕️ Nome Medico</div>
-        <p class="faq-a">Precompilato. Appare nel blocco firma della relazione. Non viene incluso nel verbale operatorio (già presente nel registro di sala).</p>
+        <div class="faq-q">👨‍⚕️ Nome Medico / Chirurgo</div>
+        <p class="faq-a">Appare nel blocco firma delle relazioni cliniche. <strong>Non visibile in modalità Registro Operatorio</strong>.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">🎓 Qualifica / Titolo</div>
+        <p class="faq-a">Campo facoltativo a due righe — es. "Specialista in Ostetricia e Ginecologia / Senior Consultant UOC...". Appare sotto il nome nella firma delle relazioni. Lasciando vuoto il campo, la firma mostra solo il nome. <strong>Non visibile in modalità Registro Operatorio</strong>.</p>
       </div>
     </section>
 
@@ -950,6 +992,16 @@
     <section class="section" id="tips">
       <div class="section-eyebrow">Avanzato</div>
       <h2 class="section-title"><span class="icon">💡</span>Consigli & trucchi</h2>
+
+      <div class="tip-item">
+        <div class="tip-header" onclick="toggleTip(this)">
+          <span><span class="tip-icon">📝</span> Formato Sintetico per il registro operatorio</span>
+          <span class="tip-toggle">+</span>
+        </div>
+        <div class="tip-body">
+          <p>Se il tuo registro accetta solo un campo testo libero senza formattazione, usa il formato <strong>Sintetico</strong>. Genera un unico paragrafo continuo che copre tutta la procedura in 8–10 righe. Dopo la generazione, usa <strong>Copia Testo</strong> per avere la versione plain senza nessun tag HTML.</p>
+        </div>
+      </div>
 
       <div class="tip-item">
         <div class="tip-header" onclick="toggleTip(this)">
@@ -1033,8 +1085,8 @@
       </div>
 
       <div class="faq-item">
-        <div class="faq-q">Il verbale operatorio include i nomi dei medici?</div>
-        <p class="faq-a">No — intenzionalmente. Il verbale generato è solo la <em>descrizione tecnica dell'intervento</em>, che viene copiata nel registro operatorio già predisposto dalla sala operatoria, dove sono già presenti chirurgo, assistente, anestesista e tipo di anestesia. L'intestazione istituzionale e la data compaiono nell'output ma non i nomi dell'equipe.</p>
+        <div class="faq-q">Il verbale operatorio include intestazione, data e nomi dei medici?</div>
+        <p class="faq-a">No — intenzionalmente. L'output del Registro Operatorio è <strong>solo il testo chirurgico narrativo</strong>, senza intestazione istituzionale, data o blocco firma. Tutti questi dati sono già nel modulo predisposto dalla sala operatoria. Il verbale generato si incolla direttamente nel campo "Descrizione intervento" del registro esistente.</p>
       </div>
 
       <div class="faq-item">
@@ -1050,6 +1102,46 @@
       <div class="faq-item" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
         <div class="faq-q">Il modello può sbagliare?</div>
         <p class="faq-a">Sì. Come ogni sistema AI, Claude può commettere errori clinici o produrre descrizioni non ottimali. Il documento generato è sempre <strong>da revisionare prima della firma</strong>. L'applicazione è uno strumento di supporto alla redazione, non un sostituto del giudizio clinico.</p>
+      </div>
+
+    </section>
+
+    <!-- CONFIGURAZIONE SERVIZI -->
+    <section class="section" id="configurazione-servizi">
+      <div class="section-eyebrow">Deploy</div>
+      <h2 class="section-title"><span class="icon">🔧</span>Configurazione servizi</h2>
+
+      <p>Due sole modifiche a <code style="font-family:'DM Mono',monospace; font-size:13px; background:#eeeeff; color:var(--accent); padding:1px 6px; border-radius:3px;">index.html</code> attivano il tracciamento e il feedback.</p>
+
+      <div class="tip-item">
+        <div class="tip-header" onclick="toggleTip(this)">
+          <span><span class="tip-icon">📊</span> Google Analytics — Measurement ID</span>
+          <span class="tip-toggle">+</span>
+        </div>
+        <div class="tip-body">
+          <p><strong>1.</strong> Vai su <a href="https://analytics.google.com" target="_blank" style="color:var(--accent);">analytics.google.com</a> → crea una proprietà Web → ottieni il tuo <strong>Measurement ID</strong> nella forma <code style="font-family:'DM Mono',monospace; font-size:12px; background:#eeeeff; color:var(--accent); padding:1px 5px; border-radius:3px;">G-XXXXXXXXXX</code>.</p>
+          <p><strong>2.</strong> In <code style="font-family:'DM Mono',monospace; font-size:12px; background:#eeeeff; color:var(--accent); padding:1px 5px; border-radius:3px;">index.html</code>, righe 12–20, trova il blocco <code style="font-family:'DM Mono',monospace; font-size:12px; background:#eeeeff; color:var(--accent); padding:1px 5px; border-radius:3px;">GA_PLACEHOLDER_START</code>: <strong>rimuovi i commenti</strong> <code style="font-family:'DM Mono',monospace; font-size:12px;"><!-- --></code> e sostituisci entrambe le occorrenze di <code style="font-family:'DM Mono',monospace; font-size:12px; background:#eeeeff; color:var(--accent); padding:1px 5px; border-radius:3px;">G-XXXXXXXXXX</code> con il tuo ID.</p>
+          <p><strong>3.</strong> Fai il redeploy su Vercel. Verifica in Analytics → <em>Report in tempo reale</em> che il tuo accesso venga registrato.</p>
+        </div>
+      </div>
+
+      <div class="tip-item">
+        <div class="tip-header" onclick="toggleTip(this)">
+          <span><span class="tip-icon">💬</span> Formspree — Form ID per i feedback</span>
+          <span class="tip-toggle">+</span>
+        </div>
+        <div class="tip-body">
+          <p><strong>1.</strong> Vai su <a href="https://formspree.io" target="_blank" style="color:var(--accent);">formspree.io</a> → registrati → crea un nuovo form con la tua email come destinazione. Ottieni l'endpoint nella forma <code style="font-family:'DM Mono',monospace; font-size:12px; background:#eeeeff; color:var(--accent); padding:1px 5px; border-radius:3px;">https://formspree.io/f/xxxxxxxx</code>.</p>
+          <p><strong>2.</strong> In <code style="font-family:'DM Mono',monospace; font-size:12px; background:#eeeeff; color:var(--accent); padding:1px 5px; border-radius:3px;">index.html</code>, cerca <code style="font-family:'DM Mono',monospace; font-size:12px; background:#eeeeff; color:var(--accent); padding:1px 5px; border-radius:3px;">YOUR_FORM_ID</code> (circa riga 794) e sostituisci con il tuo ID (es. <code style="font-family:'DM Mono',monospace; font-size:12px;">abcd1234</code>).</p>
+          <p><strong>3.</strong> Testa il form cliccando "💬 Invia feedback" nell'app. Piano gratuito: 50 invii/mese.</p>
+        </div>
+      </div>
+
+      <div class="callout callout-key" style="margin-top:20px;">
+        <span class="callout-icon">📄</span>
+        <div class="callout-body">
+          <p>Il file <a href="SETUP.md" target="_blank" style="color:var(--teal); font-weight:600;">SETUP.md</a> contiene le istruzioni complete con i comandi esatti da modificare, inclusa la gestione dell'API Key Anthropic su Vercel.</p>
+        </div>
       </div>
 
     </section>
