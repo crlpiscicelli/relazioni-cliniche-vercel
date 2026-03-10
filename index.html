@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Generatore Relazioni Cliniche AI</title>
+
+<!-- Google tag (gtag.js) -->
+<!-- GA_PLACEHOLDER_START -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VEQS9NREWP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-VEQS9NREWP');
+</script>
+<!-- GA_PLACEHOLDER_END -->
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&display=swap');
   
@@ -517,7 +528,37 @@
   .toast.error {
     background: #dc2626;
   }
-  
+
+  /* ── Access & Pathology Chips ── */
+  .access-chip, .patologia-chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 2px solid #d1d5db;
+    background: white;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .access-chip:hover { border-color: #764ba2; color: #764ba2; }
+  .access-chip.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.35);
+  }
+  .patologia-chip { border-color: #c7d2fe; color: #3730a3; background: #f5f3ff; }
+  .patologia-chip:hover { border-color: #764ba2; background: #ede9fe; }
+  .patologia-chip.active {
+    background: #4f46e5;
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 2px 8px rgba(79,70,229,0.3);
+  }
+
   @media print {
     body { 
       background: white !important; 
@@ -570,11 +611,20 @@
 
 <div class="container">
   <div class="app-header">
-    <div class="app-title">🏥 Generatore Relazioni Cliniche AI</div>
-    <div class="app-subtitle">Powered by Claude API su Vercel - Relazioni complete senza limiti di timeout</div>
-    <div class="cloud-badge">
-      <span>⚡</span>
-      <span>Deploy su Vercel</span>
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div class="app-title">🏥 Generatore Relazioni Cliniche AI</div>
+        <div class="app-subtitle">Powered by Claude API su Vercel · Relazioni complete senza limiti di timeout</div>
+        <div style="display:flex; align-items:center; gap:10px; margin-top:8px; flex-wrap:wrap;">
+          <div class="cloud-badge"><span>⚡</span><span>Deploy su Vercel</span></div>
+          <a href="guida.html" target="_blank" style="display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:#e0f2fe; color:#0369a1; text-decoration:none;">📖 Guida all'uso</a>
+          <button onclick="openFeedback()" style="display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:#fce7f3; color:#9d174d; border:none; cursor:pointer;">💬 Invia feedback</button>
+        </div>
+      </div>
+      <div style="text-align:right; font-size:11px; color:#94a3b8; line-height:1.7; padding-top:4px;">
+        Sviluppato da<br>
+        <span style="font-weight:600; color:#64748b;">Dott. Carlo Piscicelli</span>
+      </div>
     </div>
   </div>
   
@@ -588,13 +638,14 @@
         
         <div class="setting-group">
           <label class="setting-label">📋 Tipo Relazione</label>
-          <select id="reportType" class="setting-select">
+          <select id="reportType" class="setting-select" onchange="onReportTypeChange()">
             <option value="obstetric">Ostetrica (Monitoraggio Gravidanza)</option>
             <option value="gynecologic">Ginecologica (Visita Ambulatoriale)</option>
+            <option value="surgical">🔪 Registro Operatorio</option>
           </select>
         </div>
         
-        <div class="setting-group">
+        <div class="setting-group" id="formatGroup">
           <label class="setting-label">📏 Formato Relazione</label>
           <select id="reportFormat" class="setting-select">
             <option value="complete">Completo (dettagliato con tabelle)</option>
@@ -605,7 +656,7 @@
         <div class="setting-group">
           <label class="setting-label">🏛️ Intestazione</label>
           <select id="headerType" class="setting-select" onchange="updateCustomHeader()">
-            <option value="gemelli">Fondazione Policlinico Gemelli IRCCS</option>
+            <option value="gemelli">Gemelli IRCCS</option>
             <option value="balduina">Balduina Medica</option>
             <option value="apollodoro">Poliambulatorio Apollodoro</option>
             <option value="itor">Nuova Itor Casa di Cura</option>
@@ -619,8 +670,48 @@
         </div>
         
         <div class="setting-group">
-          <label class="setting-label">👨‍⚕️ Nome Medico</label>
+          <label class="setting-label">👨‍⚕️ Nome Medico / Chirurgo</label>
           <input type="text" id="doctorName" class="setting-input" placeholder="Dott. Carlo Piscicelli" value="Dott. Carlo Piscicelli">
+        </div>
+
+        <div class="setting-group" style="grid-column: 1 / -1;">
+          <label class="setting-label">🎓 Qualifica / Titolo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(appare nella firma — facoltativo)</span></label>
+          <textarea id="doctorQualifica" class="setting-textarea" placeholder="Specialista in Ostetricia e Ginecologia&#10;Senior Consultant — UOC Ostetricia e Ginecologia" style="min-height:58px;"></textarea>
+        </div>
+
+        <!-- Campi aggiuntivi per Registro Operatorio -->
+        <div id="surgicalFields" style="display:none; grid-column: 1 / -1;">
+          <div style="border-top: 2px solid #e2e8f0; margin: 8px 0 16px; padding-top: 16px;">
+            <div style="font-size: 13px; font-weight: 600; color: #764ba2; margin-bottom: 14px;">🔪 Parametri Intervento</div>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+
+              <!-- ACCESSO: chips multipli -->
+              <div class="setting-group">
+                <label class="setting-label">🚪 Via di accesso <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(seleziona uno o più)</span></label>
+                <div id="accessoChips" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+                  <button type="button" class="access-chip" data-accesso="isteroscopico" onclick="toggleAccesso(this)">🔭 Isteroscopico</button>
+                  <button type="button" class="access-chip" data-accesso="laparoscopico" onclick="toggleAccesso(this)">🎥 Laparoscopico</button>
+                  <button type="button" class="access-chip" data-accesso="laparotomico" onclick="toggleAccesso(this)">✂️ Laparotomico</button>
+                  <button type="button" class="access-chip" data-accesso="vaginale" onclick="toggleAccesso(this)">🔴 Vaginale</button>
+                  <button type="button" class="access-chip" data-accesso="vulvare/perineale" onclick="toggleAccesso(this)">🟣 Vulvare/Perineale</button>
+                  <button type="button" class="access-chip" data-accesso="ostetrico" onclick="toggleAccesso(this)">👶 Ostetrico</button>
+                </div>
+              </div>
+
+              <!-- PATOLOGIE: checkbox multipli, filtrati dinamicamente -->
+              <div class="setting-group" id="patologieGroup" style="display:none;">
+                <label class="setting-label">🔬 Patologia / Intervento <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(seleziona uno o più)</span></label>
+                <div id="patologieChips" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;"></div>
+              </div>
+
+              <!-- PROBLEMATICHE -->
+              <div class="setting-group">
+                <label class="setting-label">🔎 Reperti / caratteristiche della patologia <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(facoltativo — guida la tecnica)</span></label>
+                <input type="text" id="problematiche" class="setting-input" placeholder="es. cisti ovaio dx 8 cm superficie regolare mobile senza aderenze — polipo parete posteriore peduncolo sottile 1.5 cm — mioma G1 3 cm — aderenze periannessialo sx — Douglas parzialmente obliterato...">
+              </div>
+
+            </div>
+          </div>
         </div>
         
       </div>
@@ -630,25 +721,20 @@
   <div class="main-grid">
     
     <div class="panel">
-      <div class="panel-title">📋 Dati Cartella Clinica</div>
+      <div class="panel-title" id="inputPanelTitle">📋 Dati Cartella Clinica</div>
       <textarea id="inputData" class="input-area" placeholder="Incolla qui i dati della cartella dal tuo database...
 
 Per RELAZIONE OSTETRICA:
-Sig.ra: NOME COGNOME
-Anni: 36
-Gravida: 1
-Para: 0
-U.M.: 11/06/2025
-...
+Sig.ra: NOME COGNOME / Anni: 36 / Gravida: 1 / Para: 0 / U.M.: 11/06/2025 ...
 
 Per RELAZIONE GINECOLOGICA:
-Anni 30
-UM. 22/01/2026
-Note anamnestiche: cicli regolari, parità 0/0/0/0
-Motivo della visita: controllo
-Alla visita: ..."></textarea>
+Anni 30 / UM. 22/01/2026 / Motivo della visita: controllo ...
+
+Per REGISTRO OPERATORIO:
+Facoltativo — le chips accesso + patologia sono sufficienti per un verbale standard.
+Usa questo campo per dettagli tecnici specifici: strumentazione, tappe particolari, reperto istologico intraoperatorio..."></textarea>
       <button class="btn-primary" onclick="generateReport()" id="generateBtn">
-        <span>✨ Genera Relazione con AI</span>
+        <span id="generateBtnLabel">✨ Genera Relazione con AI</span>
       </button>
       <div class="cost-estimate" id="costEstimate"></div>
       
@@ -656,6 +742,7 @@ Alla visita: ..."></textarea>
         <div style="font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 12px;">🧪 Test rapido:</div>
         <button class="btn-secondary" onclick="loadObstetricExample()">Esempio Ostetrico</button>
         <button class="btn-secondary" onclick="loadGynecologicExample()">Esempio Ginecologico</button>
+        <button class="btn-secondary" onclick="loadSurgicalExample()" style="background: #f3e8ff; color: #764ba2; border-color: #764ba2;">🔪 Esempio Chirurgico</button>
       </div>
     </div>
     
@@ -689,6 +776,50 @@ Alla visita: ..."></textarea>
   </div>
 </div>
 
+<!-- ═══ FEEDBACK MODAL ═══ -->
+<div id="feedbackOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center;">
+  <div style="background:white; border-radius:14px; padding:32px; max-width:480px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.25); position:relative;">
+    <button onclick="closeFeedback()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#94a3b8; line-height:1;">✕</button>
+    <div style="font-size:20px; font-weight:700; color:#1e293b; margin-bottom:6px;">💬 Invia un feedback</div>
+    <div style="font-size:13px; color:#64748b; margin-bottom:22px;">Suggerimenti, segnalazioni o richieste di nuove funzioni — ogni feedback è benvenuto.</div>
+
+    <!-- ═══════════════════════════════════════════════
+         FORMSPREE — sostituisci YOUR_FORM_ID con
+         l'ID ottenuto da formspree.io/forms
+         ═══════════════════════════════════════════════ -->
+    <form id="feedbackForm" action="https://formspree.io/f/mreypkgl" method="POST" onsubmit="submitFeedback(event)">
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Tipo</label>
+        <select name="tipo" style="width:100%; padding:9px 12px; border:2px solid #e2e8f0; border-radius:6px; font-size:14px; font-family:inherit; outline:none;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+          <option value="suggerimento">💡 Suggerimento / Nuova funzione</option>
+          <option value="bug">🐛 Segnalazione errore</option>
+          <option value="miglioramento">✏️ Proposta di miglioramento</option>
+          <option value="altro">💬 Altro</option>
+        </select>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Messaggio</label>
+        <textarea name="messaggio" required rows="4" placeholder="Descrivi il tuo suggerimento o il problema riscontrato..." style="width:100%; padding:10px 12px; border:2px solid #e2e8f0; border-radius:6px; font-size:14px; font-family:inherit; resize:vertical; outline:none;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:12px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Email (facoltativa — per ricevere risposta)</label>
+        <input type="email" name="email" placeholder="nome@esempio.it" style="width:100%; padding:9px 12px; border:2px solid #e2e8f0; border-radius:6px; font-size:14px; font-family:inherit; outline:none;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+      </div>
+      <input type="hidden" name="_subject" value="Feedback — Generatore Relazioni Cliniche AI">
+      <input type="hidden" name="versione" value="v3f">
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button type="button" onclick="closeFeedback()" style="padding:10px 20px; background:white; border:2px solid #e2e8f0; border-radius:6px; font-size:14px; font-weight:600; color:#64748b; cursor:pointer;">Annulla</button>
+        <button type="submit" id="feedbackSubmitBtn" style="padding:10px 24px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer;">Invia →</button>
+      </div>
+    </form>
+    <div id="feedbackSuccess" style="display:none; text-align:center; padding:20px 0;">
+      <div style="font-size:40px; margin-bottom:12px;">✅</div>
+      <div style="font-size:16px; font-weight:600; color:#065f46; margin-bottom:6px;">Grazie per il feedback!</div>
+      <div style="font-size:13px; color:#64748b;">Il messaggio è stato inviato al Dott. Piscicelli.</div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -702,6 +833,136 @@ function toggleSettings() {
   toggle.classList.toggle('collapsed');
 }
 
+// ── Mappa accesso → patologie disponibili ──────────────────────
+const PATOLOGIE_MAP = {
+  isteroscopico: [
+    { v: 'polipo endometriale',            l: 'Polipo endometriale' },
+    { v: 'mioma sottomucoso',              l: 'Mioma sottomucoso (G0/G1/G2)' },
+    { v: 'setto uterino',                  l: 'Setto uterino' },
+    { v: 'sinechie uterine (Asherman)',    l: 'Sinechie uterine (Asherman)' },
+    { v: 'ablazione endometriale',         l: 'Ablazione endometriale' },
+    { v: 'corpo estraneo / IUD',           l: 'Corpo estraneo / IUD' },
+    { v: 'biopsia endometriale',           l: 'Biopsia endometriale diretta' },
+  ],
+  laparoscopico: [
+    { v: 'cisti ovarica (cistectomia)',    l: 'Cisti ovarica (cistectomia)' },
+    { v: 'mioma uterino (miomectomia)',    l: 'Mioma uterino (miomectomia)' },
+    { v: 'endometriosi',                   l: 'Endometriosi' },
+    { v: 'gravidanza ectopica',            l: 'Gravidanza ectopica' },
+    { v: 'salpingectomia / annessiectomia',l: 'Salpingectomia / Annessiectomia' },
+    { v: 'isterectomia laparoscopica',     l: 'Isterectomia (TLH/LAVH)' },
+    { v: 'sterilizzazione tubarica',       l: 'Sterilizzazione tubarica' },
+    { v: 'adesiolisi pelvica',             l: 'Adesiolisi pelvica' },
+    { v: 'miomectomia laparoscopica',      l: 'Miomectomia laparoscopica' },
+  ],
+  laparotomico: [
+    { v: 'mioma uterino (miomectomia laparotomica)', l: 'Mioma uterino (miomectomia)' },
+    { v: 'isterectomia laparotomica',      l: 'Isterectomia laparotomica' },
+    { v: 'cisti ovarica (laparotomica)',   l: 'Cisti ovarica (laparotomica)' },
+    { v: 'endometriosi (laparotomica)',    l: 'Endometriosi (laparotomica)' },
+    { v: 'staging oncologico',             l: 'Staging oncologico' },
+    { v: 'adesiolisi (laparotomica)',      l: 'Adesiolisi (laparotomica)' },
+  ],
+  vaginale: [
+    { v: 'isterectomia vaginale',          l: 'Isterectomia vaginale' },
+    { v: 'prolasso genitale (correzione)', l: 'Prolasso genitale (colporrafia ant./post.)' },
+    { v: 'incontinenza urinaria (TOT/TVT)',l: 'Incontinenza urinaria (TOT/TVT)' },
+    { v: 'culdocentesi',                   l: 'Culdocentesi' },
+    { v: 'colposcopia con biopsia',        l: 'Colposcopia con biopsia cervicale' },
+    { v: 'LEEP / conizzazione',            l: 'LEEP / Conizzazione cervicale' },
+  ],
+  'vulvare/perineale': [
+    { v: 'condilomatosi vulvare',                    l: 'Condilomatosi vulvare' },
+    { v: 'bartholinite (marsupializzazione)',         l: 'Bartholinite (marsupializzazione)' },
+    { v: 'cisti del dotto di Bartolino',             l: 'Cisti dotto di Bartolino' },
+    { v: 'biopsia vulvare',                          l: 'Biopsia vulvare' },
+    { v: 'vulvectomia parziale',                     l: 'Vulvectomia parziale' },
+    { v: 'episioplastica / perineorrafia',            l: 'Episioplastica / Perineorrafia' },
+  ],
+  ostetrico: [
+    { v: 'taglio cesareo',                           l: 'Taglio cesareo' },
+    { v: 'revisione cavità uterina (post-partum)',   l: 'Revisione cavità uterina (post-partum)' },
+    { v: 'cerchiaggio cervicale',                    l: 'Cerchiaggio cervicale' },
+    { v: 'revisione della cicatrice uterina',        l: 'Revisione cicatrice uterina' },
+  ],
+};
+
+function onReportTypeChange() {
+  const reportType = document.getElementById('reportType').value;
+  const surgicalFields = document.getElementById('surgicalFields');
+  const formatGroup = document.getElementById('formatGroup');
+  const inputTitle = document.getElementById('inputPanelTitle');
+  const btnLabel = document.getElementById('generateBtnLabel');
+
+  if (reportType === 'surgical') {
+    surgicalFields.style.display = 'block';
+    if (formatGroup) formatGroup.style.display = 'none';
+    inputTitle.textContent = '🔪 Dati Intervento';
+    btnLabel.textContent = '✨ Genera Verbale Operatorio';
+  } else {
+    surgicalFields.style.display = 'none';
+    if (formatGroup) formatGroup.style.display = '';
+    inputTitle.textContent = '📋 Dati Cartella Clinica';
+    btnLabel.textContent = '✨ Genera Relazione con AI';
+    // reset chips
+    document.querySelectorAll('.access-chip.active').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.patologia-chip.active').forEach(c => c.classList.remove('active'));
+  }
+}
+
+function toggleAccesso(btn) {
+  btn.classList.toggle('active');
+  aggiornaPatologie();
+}
+
+function aggiornaPatologie() {
+  const accessiAttivi = Array.from(document.querySelectorAll('.access-chip.active'))
+                             .map(c => c.dataset.accesso);
+  const group = document.getElementById('patologieGroup');
+  const container = document.getElementById('patologieChips');
+
+  if (accessiAttivi.length === 0) {
+    group.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+
+  // Raccogli patologie uniche mantenendo l'ordine per accesso
+  const seen = new Set();
+  const patologie = [];
+  accessiAttivi.forEach(acc => {
+    (PATOLOGIE_MAP[acc] || []).forEach(p => {
+      if (!seen.has(p.v)) { seen.add(p.v); patologie.push(p); }
+    });
+  });
+
+  // Salva selezioni precedenti
+  const selezionate = new Set(
+    Array.from(container.querySelectorAll('.patologia-chip.active')).map(c => c.dataset.patologia)
+  );
+
+  container.innerHTML = '';
+  patologie.forEach(p => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'patologia-chip' + (selezionate.has(p.v) ? ' active' : '');
+    btn.dataset.patologia = p.v;
+    btn.textContent = p.l;
+    btn.onclick = () => btn.classList.toggle('active');
+    container.appendChild(btn);
+  });
+
+  group.style.display = 'block';
+}
+
+function getAccessiSelezionati() {
+  return Array.from(document.querySelectorAll('.access-chip.active')).map(c => c.dataset.accesso);
+}
+
+function getPatologieSelezionate() {
+  return Array.from(document.querySelectorAll('.patologia-chip.active')).map(c => c.dataset.patologia);
+}
+
 function updateCustomHeader() {
   const headerType = document.getElementById('headerType').value;
   const customGroup = document.getElementById('customHeaderGroup');
@@ -712,7 +973,7 @@ function getHeaderConfig() {
   const headerType = document.getElementById('headerType').value;
   const headers = {
     gemelli: {
-      institution: 'Fondazione Policlinico Universitario Agostino Gemelli IRCCS',
+      institution: 'Gemelli IRCCS',
       department: 'Dipartimento di Ostetricia e Ginecologia'
     },
     balduina: {
@@ -756,16 +1017,31 @@ function getCurrentDate() {
 async function generateReport() {
   const inputData = document.getElementById('inputData').value.trim();
   const reportType = document.getElementById('reportType').value;
-  const reportFormat = document.getElementById('reportFormat').value;
+  const reportFormat = document.getElementById('reportFormat') ? document.getElementById('reportFormat').value : 'complete';
   const doctorName = document.getElementById('doctorName').value.trim();
+  const doctorQualifica = document.getElementById('doctorQualifica')?.value.trim() || '';
   
+  // Per il registro operatorio i dati liberi sono facoltativi se è selezionato almeno un accesso
   if (!inputData) {
-    showToast('⚠️ Inserisci i dati della cartella', 'error');
-    return;
+    if (reportType === 'surgical') {
+      if (getAccessiSelezionati().length === 0) {
+        showToast('⚠️ Seleziona almeno una via di accesso', 'error');
+        return;
+      }
+      // OK: chips sufficienti, nessun testo obbligatorio
+    } else {
+      showToast('⚠️ Inserisci i dati della cartella', 'error');
+      return;
+    }
   }
   
   const header = getHeaderConfig();
   const oggi = getCurrentDate();
+  
+  // Surgical-specific fields
+  const tipoAccesso = getAccessiSelezionati().join(' + ') || '';
+  const tipoIntervento = getPatologieSelezionate().join(' + ') || '';
+  const problematiche = document.getElementById('problematiche')?.value.trim() || '';
   
   const loader = document.getElementById('loader');
   const btn = document.getElementById('generateBtn');
@@ -776,17 +1052,26 @@ async function generateReport() {
   preview.innerHTML = '';
   
   try {
+    const payload = {
+      cartella: inputData,
+      reportType,
+      reportFormat,
+      header,
+      doctorName,
+      doctorQualifica,
+      oggi
+    };
+    
+    if (reportType === 'surgical') {
+      payload.tipoAccesso = tipoAccesso;
+      payload.tipoIntervento = tipoIntervento;
+      payload.problematiche = problematiche;
+    }
+    
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        cartella: inputData,
-        reportType,
-        reportFormat,
-        header,
-        doctorName,
-        oggi
-      })
+      body: JSON.stringify(payload)
     });
     
     if (!response.ok) {
@@ -806,8 +1091,8 @@ async function generateReport() {
     
     document.getElementById('outputActions').style.display = 'flex';
     
-    const formatLabel = reportFormat === 'brief' ? 'sintetica' : 'completa';
-    showToast(`✅ Relazione ${formatLabel} generata!`);
+    const label = reportType === 'surgical' ? 'verbale operatorio' : (reportFormat === 'brief' ? 'nota sintetica' : 'relazione completa');
+    showToast(`✅ ${label.charAt(0).toUpperCase() + label.slice(1)} generata!`);
     
     if (data.usage) {
       document.getElementById('costEstimate').textContent = 
@@ -960,7 +1245,7 @@ function clearAll() {
     <div class="empty-state">
       <div class="empty-state-icon">🤖</div>
       <div><strong>Pronto all'uso!</strong> Incolla i dati e genera la relazione</div>
-      <div style="margin-top: 12px; font-size: 13px;">Scegli tra formato <strong>Completo</strong> o <strong>Sintetico</strong></div>
+      <div style="margin-top: 12px; font-size: 13px;">Scegli tra formato <strong>Completo</strong>, <strong>Sintetico</strong> o <strong>Registro Operatorio</strong></div>
     </div>
   `;
   document.getElementById('previewFrame').setAttribute('contenteditable', 'false');
@@ -978,6 +1263,7 @@ function showToast(message, type = 'success') {
 
 function loadObstetricExample() {
   document.getElementById('reportType').value = 'obstetric';
+  onReportTypeChange();
   document.getElementById('inputData').value = `Sig.ra: LUDOVICA FERRI
 Anni: 36
 Gravida: 1
@@ -1012,6 +1298,7 @@ Esami ecografici:
 
 function loadGynecologicExample() {
   document.getElementById('reportType').value = 'gynecologic';
+  onReportTypeChange();
   document.getElementById('inputData').value = `Anni: 30
 U.M.: 22/01/2026
 Note anamnestiche: cicli regolari 28/4, parità 0/0/0/0, ultima visita 1 anno fa
@@ -1027,6 +1314,74 @@ Ecografia office: endometrio 5mm trilaminare, ovaio dx con follicolo 18mm, ovaio
 Prescrizioni: continuare controlli annuali, consigliato PAP test`;
   showToast('📝 Esempio ginecologico caricato');
 }
+
+function loadSurgicalExample() {
+  document.getElementById('reportType').value = 'surgical';
+  onReportTypeChange();
+  // Attiva chip accesso isteroscopico
+  document.querySelectorAll('.access-chip').forEach(c => c.classList.remove('active'));
+  const chipIsto = document.querySelector('.access-chip[data-accesso="isteroscopico"]');
+  if (chipIsto) { chipIsto.classList.add('active'); aggiornaPatologie(); }
+  // Attiva chip patologia polipo
+  setTimeout(() => {
+    const chipPolipo = document.querySelector('.patologia-chip[data-patologia="polipo endometriale"]');
+    if (chipPolipo) chipPolipo.classList.add('active');
+  }, 50);
+  document.getElementById('problematiche').value = '';
+  document.getElementById('inputData').value = `Polipo endometriale singolo, parete posteriore, diametro circa 1 cm, aspetto regolare, peduncolo sottile
+Resettore 26 Fr, mezzo di distensione: soluzione salina, pompa di infusione pressione 80 mmHg
+Resezione con ansa monopolare alla base del peduncolo, recupero del campione con pinza
+Campione inviato all'esame istologico`;
+  showToast('🔪 Esempio chirurgico caricato');
+}
+
+// ── Feedback modal ──────────────────────────────
+function openFeedback() {
+  const overlay = document.getElementById('feedbackOverlay');
+  overlay.style.display = 'flex';
+  document.getElementById('feedbackSuccess').style.display = 'none';
+  document.getElementById('feedbackForm').style.display = 'block';
+  document.getElementById('feedbackSubmitBtn').textContent = 'Invia →';
+  document.getElementById('feedbackSubmitBtn').disabled = false;
+}
+
+function closeFeedback() {
+  document.getElementById('feedbackOverlay').style.display = 'none';
+}
+
+async function submitFeedback(e) {
+  e.preventDefault();
+  const btn = document.getElementById('feedbackSubmitBtn');
+  btn.textContent = 'Invio in corso...';
+  btn.disabled = true;
+
+  try {
+    const form = document.getElementById('feedbackForm');
+    const data = new FormData(form);
+    const resp = await fetch(form.action, {
+      method: 'POST',
+      body: data,
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (resp.ok) {
+      form.style.display = 'none';
+      document.getElementById('feedbackSuccess').style.display = 'block';
+      setTimeout(closeFeedback, 3000);
+    } else {
+      throw new Error();
+    }
+  } catch {
+    btn.textContent = 'Invia →';
+    btn.disabled = false;
+    showToast('❌ Errore invio — controlla la connessione', 'error');
+  }
+}
+
+// Chiudi il modal cliccando fuori
+document.getElementById('feedbackOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeFeedback();
+});
 </script>
 
 </body>
