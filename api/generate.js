@@ -527,16 +527,6 @@ ${isBrief ? `ISTRUZIONI FORMATO SINTETICO:
 OUTPUT HTML:
 
 <div class="report">
-  <div class="report-header">
-    <div>
-      <div class="report-institution">${header.institution}</div>
-      ${header.department ? `<div class="report-department">${header.department}</div>` : ''}
-    </div>
-    <div class="report-date">Data intervento:<br><strong>${oggi}</strong></div>
-  </div>
-  <div class="report-title">Descrizione dell'Intervento</div>
-  <div class="report-subtitle">${sottotitoloHTML}</div>
-
   <div class="alert alert-info">
     <strong>ℹ️ Testo da copiare nel registro operatorio</strong> — Dati paziente, equipe e anestesia sono già nel registro.
   </div>
