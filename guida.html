@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guida — Generatore Relazioni Cliniche AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:        #1a1a2e;
+    --ink-light:  #4a4a6a;
+    --ink-faint:  #8888a8;
+    --page:       #fafaf8;
+    --paper:      #ffffff;
+    --rule:       #e8e8f0;
+    --accent:     #4f46e5;
+    --accent-2:   #7c3aed;
+    --accent-soft:#ede9fe;
+    --green:      #065f46;
+    --green-soft: #d1fae5;
+    --amber:      #92400e;
+    --amber-soft: #fef3c7;
+    --red:        #991b1b;
+    --red-soft:   #fee2e2;
+    --teal:       #0f766e;
+    --teal-soft:  #ccfbf1;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--page);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── SIDEBAR NAV ─────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    background: var(--ink);
+    color: #c8c8e8;
+    padding: 32px 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-logo {
+    padding: 0 24px 28px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 20px;
+  }
+
+  .sidebar-logo-title {
+    font-family: 'Crimson Pro', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
+  }
+
+  .sidebar-logo-sub {
+    font-size: 11px;
+    color: #7878a8;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-top: 4px;
+  }
+
+  .nav-section {
+    padding: 0 16px;
+    margin-bottom: 6px;
+  }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #5858a0;
+    padding: 10px 8px 6px;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: #a8a8cc;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 400;
+    transition: all 0.15s;
+  }
+
+  .nav-link:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .nav-link.active { background: rgba(79,70,229,0.3); color: #a5b4fc; }
+
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 20px 24px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 11px;
+    color: #4848a0;
+    line-height: 1.6;
+  }
+
+  /* ── MAIN CONTENT ────────────────────────────── */
+  .main {
+    padding: 56px 64px;
+    max-width: 880px;
+  }
+
+  /* ── HERO ────────────────────────────────────── */
+  .hero {
+    margin-bottom: 64px;
+    padding-bottom: 48px;
+    border-bottom: 2px solid var(--rule);
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+
+  .hero-title {
+    font-family: 'Crimson Pro', serif;
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 20px;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--accent-2);
+  }
+
+  .hero-lead {
+    font-size: 17px;
+    color: var(--ink-light);
+    max-width: 620px;
+    line-height: 1.75;
+    margin-bottom: 32px;
+  }
+
+  .hero-badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .badge-purple { background: var(--accent-soft); color: var(--accent); }
+  .badge-green  { background: var(--green-soft);  color: var(--green); }
+  .badge-amber  { background: var(--amber-soft);  color: var(--amber); }
+  .badge-teal   { background: var(--teal-soft);   color: var(--teal); }
+
+  /* ── SECTIONS ────────────────────────────────── */
+  .section {
+    margin-bottom: 72px;
+    scroll-margin-top: 32px;
+  }
+
+  .section-eyebrow {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-family: 'Crimson Pro', serif;
+    font-size: 32px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--rule);
+  }
+
+  .section-title .icon {
+    font-size: 26px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  p { margin-bottom: 14px; color: var(--ink-light); }
+
+  /* ── MODALITY CARDS ──────────────────────────── */
+  .modality-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .modality-card {
+    border: 1.5px solid var(--rule);
+    border-radius: 10px;
+    padding: 20px;
+    background: var(--paper);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .modality-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .modality-card.obs::before  { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+  .modality-card.gyn::before  { background: linear-gradient(90deg, #0891b2, #06b6d4); }
+  .modality-card.surg::before { background: linear-gradient(90deg, #7c3aed, #a855f7); }
+
+  .modality-emoji { font-size: 28px; margin-bottom: 10px; display: block; }
+
+  .modality-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .modality-desc {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  /* ── STEP FLOW ───────────────────────────────── */
+  .steps {
+    margin: 28px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .step {
+    display: flex;
+    gap: 20px;
+    position: relative;
+  }
+
+  .step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 40px;
+    bottom: -4px;
+    width: 1px;
+    background: var(--rule);
+  }
+
+  .step-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-body { padding-bottom: 28px; }
+
+  .step-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .step-desc {
+    font-size: 13.5px;
+    color: var(--ink-faint);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* ── CALLOUT BOXES ───────────────────────────── */
+  .callout {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .callout-body { font-size: 13.5px; line-height: 1.65; color: var(--ink-light); }
+  .callout-body p { margin: 0; color: inherit; }
+  .callout-body strong { color: var(--ink); }
+
+  .callout-tip    { background: var(--accent-soft); }
+  .callout-info   { background: var(--teal-soft); }
+  .callout-warn   { background: var(--amber-soft); }
+  .callout-key    { background: var(--green-soft); }
+
+  /* ── CHIP DEMO ───────────────────────────────── */
+  .chip-demo {
+    background: #f8f7ff;
+    border: 1.5px solid #e0dbff;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+
+  .chip-demo-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+
+  .chip {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 500;
+    border: 1.5px solid;
+    cursor: default;
+  }
+
+  .chip-access        { background: #4f46e5; color: white; border-color: transparent; }
+  .chip-access-idle   { background: white; color: #64748b; border-color: #d1d5db; }
+  .chip-patol         { background: #4f46e5; color: white; border-color: transparent; }
+  .chip-patol-idle    { background: #f5f3ff; color: #3730a3; border-color: #c7d2fe; }
+
+  .chip-arrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  /* ── MORPHOLOGY TABLE ────────────────────────── */
+  .morph-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 20px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1.5px var(--rule);
+  }
+
+  .morph-table thead th {
+    background: var(--ink);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 500;
+  }
+
+  .morph-table tbody tr:nth-child(even) td { background: #f8f8fc; }
+
+  .morph-table tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    line-height: 1.55;
+    color: var(--ink-light);
+  }
+
+  .morph-table tbody td:first-child { font-weight: 500; color: var(--ink); }
+
+  .morph-table code {
+    font-family: 'DM Mono', monospace;
+    font-size: 11.5px;
+    background: #eeeeff;
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* ── FORMAT BLOCKS ───────────────────────────── */
+  .format-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  .format-card {
+    border: 1.5px solid var(--rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    background: var(--paper);
+  }
+
+  .format-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .format-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+
+  .tag-complete { background: var(--green-soft); color: var(--green); }
+  .tag-brief    { background: var(--teal-soft);  color: var(--teal); }
+
+  .format-card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .format-card ul li {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    padding: 3px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+
+  .format-card ul li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ── OUTPUT SECTIONS ─────────────────────────── */
+  .output-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .output-sec {
+    background: var(--paper);
+    border: 1.5px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: var(--ink-light);
+  }
+
+  .output-sec strong { color: var(--ink); display: block; font-size: 12px; margin-bottom: 2px; }
+
+  /* ── TIPS ACCORDION ──────────────────────────── */
+  .tip-item {
+    border: 1.5px solid var(--rule);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+
+  .tip-header {
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: var(--paper);
+    user-select: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    transition: background 0.15s;
+  }
+
+  .tip-header:hover { background: #f5f5fd; }
+
+  .tip-header .tip-icon { font-size: 17px; margin-right: 10px; }
+
+  .tip-toggle { color: var(--accent); font-size: 18px; transition: transform 0.2s; }
+
+  .tip-body {
+    padding: 0 18px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s;
+    font-size: 13.5px;
+    color: var(--ink-faint);
+    line-height: 1.7;
+    background: #fafafe;
+    border-top: 1px solid var(--rule);
+  }
+
+  .tip-body.open { max-height: 400px; padding: 14px 18px; }
+  .tip-body p { margin: 0 0 8px; color: inherit; }
+  .tip-body p:last-child { margin: 0; }
+
+  /* ── FAQ ─────────────────────────────────────── */
+  .faq-item {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .faq-q {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .faq-a {
+    font-size: 13.5px;
+    color: var(--ink-faint);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  /* ── SCROLLBAR ───────────────────────────────── */
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { padding: 32px 24px; }
+    .modality-grid { grid-template-columns: 1fr; }
+    .format-grid, .output-sections { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-title">Generatore<br>Relazioni Cliniche AI</div>
+      <div class="sidebar-logo-sub">Guida all'utilizzo · v3</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Panoramica</div>
+      <a href="#intro"      class="nav-link active"><span class="nav-icon">🏠</span> Cos'è l'applicazione</a>
+      <a href="#modalita"   class="nav-link"><span class="nav-icon">📋</span> Le tre modalità</a>
+      <a href="#flusso"     class="nav-link"><span class="nav-icon">▶️</span> Flusso operativo</a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Modalità Chirurgica</div>
+      <a href="#chips"      class="nav-link"><span class="nav-icon">🔪</span> Chips accesso & patologia</a>
+      <a href="#morfologia" class="nav-link"><span class="nav-icon">🔬</span> Morfologia → tecnica</a>
+      <a href="#output-surg"class="nav-link"><span class="nav-icon">📄</span> Output del verbale</a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Modalità Cliniche</div>
+      <a href="#ostetrica"  class="nav-link"><span class="nav-icon">🤰</span> Relazione ostetrica</a>
+      <a href="#ginecologica" class="nav-link"><span class="nav-icon">🩺</span> Relazione ginecologica</a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Avanzato</div>
+      <a href="#configurazione" class="nav-link"><span class="nav-icon">⚙️</span> Configurazione</a>
+      <a href="#tips"       class="nav-link"><span class="nav-icon">💡</span> Consigli & trucchi</a>
+      <a href="#faq"        class="nav-link"><span class="nav-icon">❓</span> Domande frequenti</a>
+    </div>
+
+    <div class="sidebar-footer">
+      Powered by Claude API<br>
+      Deploy su Vercel · Anthropic
+    </div>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+
+    <!-- HERO -->
+    <div class="hero" id="intro">
+      <div class="hero-eyebrow">Documentazione · v3e</div>
+      <h1 class="hero-title">Generatore<br><em>Relazioni Cliniche</em> AI</h1>
+      <p class="hero-lead">
+        Un assistente clinico intelligente che trasforma dati sintetici di cartella in relazioni professionali complete — visite ostetriche, ginecologiche e verbali operatori — pronte per la firma.
+      </p>
+      <div class="hero-badges">
+        <span class="badge badge-purple">⚡ Claude Sonnet API</span>
+        <span class="badge badge-green">🏥 Uso clinico quotidiano</span>
+        <span class="badge badge-amber">🔪 Registro operatorio</span>
+        <span class="badge badge-teal">📝 Modificabile inline</span>
+      </div>
+    </div>
+
+    <!-- LE TRE MODALITÀ -->
+    <section class="section" id="modalita">
+      <div class="section-eyebrow">Panoramica</div>
+      <h2 class="section-title"><span class="icon">📋</span>Le tre modalità</h2>
+
+      <p>L'applicazione gestisce tre tipi di documento clinico, selezionabili dal menu <strong>Tipo Relazione</strong> nella sezione Configurazione.</p>
+
+      <div class="modality-grid">
+        <div class="modality-card obs">
+          <span class="modality-emoji">🤰</span>
+          <div class="modality-name">Ostetrica</div>
+          <p class="modality-desc">Monitoraggio in gravidanza. Gestisce anamnesi, screening sierologici, ematochimici con tabella, evoluzione ecografica e piano di proseguimento.</p>
+        </div>
+        <div class="modality-card gyn">
+          <span class="modality-emoji">🩺</span>
+          <div class="modality-name">Ginecologica</div>
+          <p class="modality-desc">Visita ambulatoriale. Esame obiettivo, esame speculare, bimanuale, ecografia office, conclusioni e prescrizioni.</p>
+        </div>
+        <div class="modality-card surg">
+          <span class="modality-emoji">🔪</span>
+          <div class="modality-name">Registro Operatorio</div>
+          <p class="modality-desc">Solo la descrizione chirurgica narrativa, da copiare nel registro già predisposto. La tecnica è adattata alla morfologia della lesione.</p>
+        </div>
+      </div>
+
+      <div class="callout callout-info">
+        <span class="callout-icon">ℹ️</span>
+        <div class="callout-body">
+          <p>Le modalità <strong>Ostetrica</strong> e <strong>Ginecologica</strong> offrono anche il formato <strong>Sintetico</strong> — una nota narrativa di ~300 parole per database ospedaliero, senza tabelle.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FLUSSO OPERATIVO -->
+    <section class="section" id="flusso">
+      <div class="section-eyebrow">Utilizzo</div>
+      <h2 class="section-title"><span class="icon">▶️</span>Flusso operativo</h2>
+
+      <p>Il workflow tipico richiede meno di 60 secondi dalla prima impostazione alla relazione pronta.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Seleziona tipo e intestazione</div>
+            <p class="step-desc">Scegli il tipo di relazione e l'intestazione istituzionale (Gemelli, Balduina, Apollodoro, Nuova Itor o personalizzata). Il nome medico è precompilato.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Inserisci i dati (o configura le chips)</div>
+            <p class="step-desc">Per <em>Ostetrica/Ginecologica</em>: incolla i dati dalla cartella. Per <em>Registro Operatorio</em>: seleziona le chips di accesso e patologia — i dati scritti sono facoltativi.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Genera con AI</div>
+            <p class="step-desc">Premi il pulsante. Claude genera la relazione in 5–15 secondi via Vercel serverless. Il costo stimato in token è visibile sotto il pulsante.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Rifinisci e usa</div>
+            <p class="step-desc">Il documento è <strong>modificabile inline</strong> nel pannello di destra. Usa <em>Copia HTML</em>, <em>Copia Testo</em> o <em>Stampa/PDF</em> per esportarlo.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHIPS -->
+    <section class="section" id="chips">
+      <div class="section-eyebrow">Registro Operatorio</div>
+      <h2 class="section-title"><span class="icon">🔪</span>Chips: accesso & patologia</h2>
+
+      <p>Selezionando la modalità <strong>Registro Operatorio</strong>, il pannello di configurazione espone due livelli di selezione a chips interattive. Il secondo livello si popola dinamicamente in base a ciò che selezioni nel primo.</p>
+
+      <div class="chip-demo">
+        <div class="chip-demo-label">Esempio — Isteroscopia operativa</div>
+        <div class="chip-row">
+          <span class="chip chip-access">🔭 Isteroscopico</span>
+          <span class="chip chip-access-idle">🎥 Laparoscopico</span>
+          <span class="chip chip-access-idle">✂️ Laparotomico</span>
+          <span class="chip chip-access-idle">🔴 Vaginale</span>
+          <span class="chip chip-access-idle">🟣 Vulvare/Perineale</span>
+          <span class="chip chip-access-idle">👶 Ostetrico</span>
+        </div>
+        <div class="chip-arrow">↓ la lista patologie si aggiorna automaticamente</div>
+        <div class="chip-row">
+          <span class="chip chip-patol">Polipo endometriale</span>
+          <span class="chip chip-patol-idle">Mioma sottomucoso</span>
+          <span class="chip chip-patol-idle">Setto uterino</span>
+          <span class="chip chip-patol-idle">Sinechie (Asherman)</span>
+          <span class="chip chip-patol-idle">Ablazione endometriale</span>
+          <span class="chip chip-patol-idle">Corpo estraneo/IUD</span>
+        </div>
+      </div>
+
+      <h3 style="font-size:16px; font-weight:600; color:var(--ink); margin:28px 0 10px;">Interventi combinati</h3>
+
+      <p>È possibile selezionare <strong>più accessi contemporaneamente</strong>. Quando si combinano, ad esempio, isteroscopico + laparoscopico, la lista patologie mostra l'unione delle voci di entrambi gli accessi, e il verbale generato si struttura automaticamente in <em>fasi separate</em>.</p>
+
+      <div class="chip-demo">
+        <div class="chip-demo-label">Esempio — Intervento combinato</div>
+        <div class="chip-row">
+          <span class="chip chip-access">🔭 Isteroscopico</span>
+          <span class="chip chip-access">🎥 Laparoscopico</span>
+          <span class="chip chip-access-idle">✂️ Laparotomico</span>
+        </div>
+        <div class="chip-arrow">↓ le patologie di entrambi gli accessi vengono unite</div>
+        <div class="chip-row">
+          <span class="chip chip-patol">Polipo endometriale</span>
+          <span class="chip chip-patol">Cisti ovarica</span>
+          <span class="chip chip-patol-idle">Mioma sottomucoso</span>
+          <span class="chip chip-patol-idle">Endometriosi</span>
+          <span class="chip chip-patol-idle">Salpingectomia</span>
+        </div>
+      </div>
+
+      <div class="callout callout-key">
+        <span class="callout-icon">✅</span>
+        <div class="callout-body">
+          <p><strong>I dati testuali sono facoltativi.</strong> Con accesso + patologia selezionati, il modello genera un verbale standard completo e clinicamente accurato. Il campo testo serve solo per aggiungere dettagli specifici — morfologia della lesione, strumentazione, reperti particolari.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MORFOLOGIA → TECNICA -->
+    <section class="section" id="morfologia">
+      <div class="section-eyebrow">Registro Operatorio</div>
+      <h2 class="section-title"><span class="icon">🔬</span>Morfologia → tecnica</h2>
+
+      <p>Il campo <strong>"Reperti / caratteristiche della patologia"</strong> è il principale vettore di personalizzazione del verbale. I dettagli morfologici e clinici che inserisci <em>guidano attivamente la scelta tecnica descritta</em> — non sono semplici annotazioni.</p>
+
+      <p>Il sistema prompt contiene una tavola di ragionamento clinico esplicita. Ecco come vengono interpretati i dati:</p>
+
+      <table class="morph-table">
+        <thead>
+          <tr>
+            <th>Dato morfologico</th>
+            <th>Impatto sul verbale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>cisti 8 cm</code> superficie regolare, mobile</td>
+            <td>Cistectomia per scollamento smusso, decompressione preliminare del contenuto, preservazione del parenchima ovarico</td>
+          </tr>
+          <tr>
+            <td><code>cisti</code> aderente al legamento largo</td>
+            <td>Lisi preventiva delle aderenze prima dell'enucleazione; attenzione all'uretere omolaterale; tecnica progressiva</td>
+          </tr>
+          <tr>
+            <td><code>endometrioma</code> (contenuto ematico)</td>
+            <td>Tecnica di Donnez o stripping; abbondante lavaggio del cavo pelvico; rischio di apertura capsulare menzionato</td>
+          </tr>
+          <tr>
+            <td><code>polipo</code> peduncolato, peduncolo sottile</td>
+            <td>Resezione alla base con singolo passaggio d'ansa; verifica dell'emostasi del letto</td>
+          </tr>
+          <tr>
+            <td><code>mioma G2</code>, >3 cm</td>
+            <td>Resezione in più tempi; monitoraggio bilancio idrico con soglia di sicurezza esplicitata (es. deficit >1500 ml)</td>
+          </tr>
+          <tr>
+            <td><code>Douglas obliterato</code></td>
+            <td>Tecnica di ureterolisi; approccio step-by-step; eventuale assistenza urologica/chirurgica</td>
+          </tr>
+          <tr>
+            <td><code>cisti aspetto papillare</code> / irregolare</td>
+            <td>Approccio cauteloso, preservazione capsula integra; menzione possibilità esame estemporaneo</td>
+          </tr>
+          <tr>
+            <td><code>ovaio dx</code></td>
+            <td>Attenzione al rapporto con uretere destro, cecum e appendice</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">💡</span>
+        <div class="callout-body">
+          <p><strong>Formato ideale del campo reperti:</strong> scrivi come descriveresti la lesione durante un'esplorazione laparoscopica — in modo descrittivo e clinico. Esempi ottimali:</p>
+          <p style="margin-top:8px; font-family:'DM Mono',monospace; font-size:12px; background:rgba(255,255,255,0.6); padding:8px 10px; border-radius:4px;">
+            cisti ovaio sx 6 cm a contenuto sieroso, superficie liscia, mobile, senza aderenze<br>
+            polipo parete posteriore 1.5 cm, peduncolo sottile, aspetto regolare<br>
+            mioma G1 sottomucoso 3 cm, a distanza 8 mm dalla sierosa<br>
+            aderenze periannessialo dx, Douglas parzialmente obliterato
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- OUTPUT VERBALE -->
+    <section class="section" id="output-surg">
+      <div class="section-eyebrow">Registro Operatorio</div>
+      <h2 class="section-title"><span class="icon">📄</span>Output del verbale</h2>
+
+      <p>L'output è <strong>solo la descrizione narrativa</strong> dell'intervento — dati paziente, equipe e anestesia non vengono generati perché già presenti nel registro predisposto dalla sala operatoria.</p>
+
+      <p>Il verbale è strutturato nelle seguenti sezioni (H3), tutte complete e senza placeholder:</p>
+
+      <div class="output-sections">
+        <div class="output-sec"><strong>Posizionamento e preparazione</strong>Litotomica / Trendelenburg, disinfezione, teli, catetere, manipolatore</div>
+        <div class="output-sec"><strong>Accesso chirurgico</strong>Speculum + Hegar, Veress + trocars, Pfannenstiel, ecc.</div>
+        <div class="output-sec"><strong>Esplorazione e reperti intraoperatori</strong>Caratteristiche della lesione, varianti anatomiche, aderenze</div>
+        <div class="output-sec"><strong>Tecnica operatoria</strong>2–4 paragrafi step-by-step, adattati alla morfologia</div>
+        <div class="output-sec"><strong>Emostasi e controllo finale</strong>Verifica di tutti i siti, coagulazione, lavaggio</div>
+        <div class="output-sec"><strong>Chiusura / Fine procedura</strong>Sutura per piani o rimozione strumento</div>
+        <div class="output-sec"><strong>Decorso intraoperatorio</strong>Decorso, complicanze, perdita ematica, diuresi</div>
+        <div class="output-sec"><strong>Campioni istologici</strong>Descrizione o assenza di campione</div>
+      </div>
+
+      <div class="callout callout-warn">
+        <span class="callout-icon">⚠️</span>
+        <div class="callout-body">
+          <p>Per interventi combinati (es. isteroscopico + laparoscopico) le sezioni <em>Accesso</em> e <em>Tecnica operatoria</em> si suddividono automaticamente in <strong>Fase Isteroscopica</strong> e <strong>Fase Laparoscopica</strong>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- RELAZIONE OSTETRICA -->
+    <section class="section" id="ostetrica">
+      <div class="section-eyebrow">Modalità Cliniche</div>
+      <h2 class="section-title"><span class="icon">🤰</span>Relazione ostetrica</h2>
+
+      <p>Genera note di monitoraggio in gravidanza a partire dai dati di cartella, calcola automaticamente le settimane gestazionali dalla U.M. e interpreta i valori laboratoristici.</p>
+
+      <div class="format-grid">
+        <div class="format-card">
+          <div class="format-card-title">Formato Completo <span class="format-tag tag-complete">Completo</span></div>
+          <ul>
+            <li>Intestazione istituzionale</li>
+            <li>Scheda paziente (dati anagrafici)</li>
+            <li>Anamnesi narrativa dettagliata</li>
+            <li>Tabella screening sierologici</li>
+            <li>Tabella ematochimici con trend</li>
+            <li>Ecografia: evoluzione biometrica</li>
+            <li>Valutazione clinica per problemi</li>
+            <li>Piano di proseguimento</li>
+            <li>Blocco firma</li>
+          </ul>
+        </div>
+        <div class="format-card">
+          <div class="format-card-title">Formato Sintetico <span class="format-tag tag-brief">Sintetico</span></div>
+          <ul>
+            <li>Nota narrativa ~300–400 parole</li>
+            <li>Nessuna tabella</li>
+            <li>Paragrafi etichettati</li>
+            <li>Adatto a database ospedaliero</li>
+            <li>Incollabile in sistemi EMR</li>
+            <li>Focalizzato sul problema principale</li>
+          </ul>
+        </div>
+      </div>
+
+      <p>I dati possono essere copiati direttamente dall'applicazione gestionale nel formato grezzo — il modello li interpreta e li riorganizza.</p>
+    </section>
+
+    <!-- RELAZIONE GINECOLOGICA -->
+    <section class="section" id="ginecologica">
+      <div class="section-eyebrow">Modalità Cliniche</div>
+      <h2 class="section-title"><span class="icon">🩺</span>Relazione ginecologica</h2>
+
+      <p>Per visite ambulatoriali ginecologiche. Struttura la nota con esame obiettivo, reperti ecografici office e piano prescrittivo.</p>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">💡</span>
+        <div class="callout-body">
+          <p><strong>Dati minimi sufficienti:</strong> età, U.M., motivo della visita, esame speculare e bimanuale. L'ecografia office è opzionale ma arricchisce significativamente l'output.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONFIGURAZIONE -->
+    <section class="section" id="configurazione">
+      <div class="section-eyebrow">Avanzato</div>
+      <h2 class="section-title"><span class="icon">⚙️</span>Configurazione</h2>
+
+      <p>Il pannello <strong>Configurazione</strong> (collassabile) contiene le impostazioni persistenti per la sessione:</p>
+
+      <div class="faq-item">
+        <div class="faq-q">📋 Tipo Relazione</div>
+        <p class="faq-a">Ostetrica · Ginecologica · Registro Operatorio. Cambiando il tipo si aggiornano dinamicamente i campi disponibili e l'interfaccia (il selettore Formato scompare in modalità chirurgica, compaiono le chips).</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">📏 Formato Relazione</div>
+        <p class="faq-a">Solo per modalità Ostetrica e Ginecologica. <em>Completo</em> genera la relazione standard con tabelle. <em>Sintetico</em> genera ~300 parole in forma narrativa per database.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">🏛️ Intestazione</div>
+        <p class="faq-a">Quattro preset (Gemelli IRCCS, Balduina Medica, Apollodoro, Nuova Itor) + campo personalizzato. L'intestazione è inclusa nell'HTML generato.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">👨‍⚕️ Nome Medico</div>
+        <p class="faq-a">Precompilato. Appare nel blocco firma della relazione. Non viene incluso nel verbale operatorio (già presente nel registro di sala).</p>
+      </div>
+    </section>
+
+    <!-- CONSIGLI -->
+    <section class="section" id="tips">
+      <div class="section-eyebrow">Avanzato</div>
+      <h2 class="section-title"><span class="icon">💡</span>Consigli & trucchi</h2>
+
+      <div class="tip-item">
+        <div class="tip-header" onclick="toggleTip(this)">
+          <span><span class="tip-icon">✂️</span> Come copiare solo il testo per un EMR</span>
+          <span class="tip-toggle">+</span>
+        </div>
+        <div class="tip-body">
+          <p>Usa il pulsante <strong>Copia Testo</strong>. Genera una versione plain-text con formattazione minimale (titoli in uppercase, • per le liste), priva di markup HTML. È la modalità ideale per incollare in Mediboard, DMS, Word o qualsiasi sistema di cartella digitale.</p>
+        </div>
+      </div>
+
+      <div class="tip-item">
+        <div class="tip-header" onclick="toggleTip(this)">
+          <span><span class="tip-icon">🖨️</span> Stampa su carta / PDF</span>
+          <span class="tip-toggle">+</span>
+        </div>
+        <div class="tip-body">
+          <p>Il pulsante <strong>Stampa / PDF</strong> attiva la stampa del browser nascondendo automaticamente sidebar, pannello input e tutti gli elementi di interfaccia. Il documento stampato rispecchia fedelmente il layout della relazione con intestazione, tipografia serif e blocco firma.</p>
+        </div>
+      </div>
+
+      <div class="tip-item">
+        <div class="tip-header" onclick="toggleTip(this)">
+          <span><span class="tip-icon">✏️</span> Modifica inline del documento generato</span>
+          <span class="tip-toggle">+</span>
+        </div>
+        <div class="tip-body">
+          <p>Dopo la generazione, il pannello destro diventa direttamente modificabile — è contrassegnato dal badge <em>Modificabile</em>. Puoi correggere qualsiasi testo, aggiungere o rimuovere sezioni, e poi copiare o stampare il documento modificato. Non serve rigenerare per correzioni minori.</p>
+        </div>
+      </div>
+
+      <div class="tip-item">
+        <div class="tip-header" onclick="toggleTip(this)">
+          <span><span class="tip-icon">🧪</span> I pulsanti di esempio</span>
+          <span class="tip-toggle">+</span>
+        </div>
+        <div class="tip-body">
+          <p>I tre pulsanti <em>Esempio Ostetrico</em>, <em>Esempio Ginecologico</em> e <em>Esempio Chirurgico</em> precompilano automaticamente tutti i campi con un caso tipo. Sono utili per testare l'output prima di usare dati reali, e per capire il formato ideale dell'input.</p>
+        </div>
+      </div>
+
+      <div class="tip-item">
+        <div class="tip-header" onclick="toggleTip(this)">
+          <span><span class="tip-icon">📊</span> Interpretare il contatore token/costo</span>
+          <span class="tip-toggle">+</span>
+        </div>
+        <div class="tip-body">
+          <p>Sotto il pulsante Genera appare il dettaglio dell'utilizzo API: token di input (dati inviati al modello, incluso il system prompt), token di output (relazione generata) e costo stimato in USD. Una relazione completa costa tipicamente <strong>$0.010–0.020</strong>. Il formato sintetico circa la metà.</p>
+        </div>
+      </div>
+
+      <div class="tip-item">
+        <div class="tip-header" onclick="toggleTip(this)">
+          <span><span class="tip-icon">🔄</span> Nuovo documento</span>
+          <span class="tip-toggle">+</span>
+        </div>
+        <div class="tip-body">
+          <p>Il pulsante <strong>Nuova</strong> (tra le azioni di output) svuota sia il campo di input sia il documento generato, mantenendo la configurazione corrente. È il modo più rapido per passare al paziente successivo.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq">
+      <div class="section-eyebrow">Supporto</div>
+      <h2 class="section-title"><span class="icon">❓</span>Domande frequenti</h2>
+
+      <div class="faq-item">
+        <div class="faq-q">I dati della cartella vengono memorizzati?</div>
+        <p class="faq-a">No. I dati vengono inviati direttamente all'API di Anthropic per generare la relazione e non sono conservati dall'applicazione. Seguono le politiche di privacy di Anthropic per le API.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Posso usare l'app su mobile?</div>
+        <p class="faq-a">Sì. Il layout si adatta per schermi piccoli (la sidebar scompare). L'esperienza ottimale rimane su desktop, specialmente per il layout a due colonne input/output.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Perché a volte la generazione impiega più di 15 secondi?</div>
+        <p class="faq-a">Il tempo dipende dalla lunghezza dell'output. Le relazioni complete con molte tabelle e sezioni H3 possono richiedere 15–25 secondi. Il formato Sintetico è sensibilmente più rapido (5–10 secondi). Se appare un errore di timeout, è possibile che la Vercel Function abbia superato il limite di 30 secondi — in questo caso basta riprovare con meno dati di input.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Il verbale operatorio include i nomi dei medici?</div>
+        <p class="faq-a">No — intenzionalmente. Il verbale generato è solo la <em>descrizione tecnica dell'intervento</em>, che viene copiata nel registro operatorio già predisposto dalla sala operatoria, dove sono già presenti chirurgo, assistente, anestesista e tipo di anestesia. L'intestazione istituzionale e la data compaiono nell'output ma non i nomi dell'equipe.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Posso personalizzare il prompt di sistema?</div>
+        <p class="faq-a">Non dall'interfaccia, ma modificando direttamente il file <code style="font-family:'DM Mono',monospace; background:#eeeeff; color:var(--accent); padding:1px 6px; border-radius:3px; font-size:12px;">api/generate.js</code> nel progetto Vercel. Ogni tipo di relazione ha la propria funzione prompt — <code style="font-family:'DM Mono',monospace; background:#eeeeff; color:var(--accent); padding:1px 6px; border-radius:3px; font-size:12px;">getCompleteObstetricPrompt</code>, <code style="font-family:'DM Mono',monospace; background:#eeeeff; color:var(--accent); padding:1px 6px; border-radius:3px; font-size:12px;">getSurgicalReportPrompt</code>, ecc.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Posso aggiungere nuovi tipi di intervento alla lista?</div>
+        <p class="faq-a">Sì. In <code style="font-family:'DM Mono',monospace; background:#eeeeff; color:var(--accent); padding:1px 6px; border-radius:3px; font-size:12px;">index.html</code> la costante <code style="font-family:'DM Mono',monospace; background:#eeeeff; color:var(--accent); padding:1px 6px; border-radius:3px; font-size:12px;">PATOLOGIE_MAP</code> mappa ogni accesso alla propria lista di patologie. Aggiungere un elemento è sufficiente per farlo apparire dinamicamente nella UI.</p>
+      </div>
+
+      <div class="faq-item" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
+        <div class="faq-q">Il modello può sbagliare?</div>
+        <p class="faq-a">Sì. Come ogni sistema AI, Claude può commettere errori clinici o produrre descrizioni non ottimali. Il documento generato è sempre <strong>da revisionare prima della firma</strong>. L'applicazione è uno strumento di supporto alla redazione, non un sostituto del giudizio clinico.</p>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<script>
+function toggleTip(header) {
+  const body = header.nextElementSibling;
+  const toggle = header.querySelector('.tip-toggle');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  toggle.textContent = isOpen ? '+' : '−';
+  toggle.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(45deg)';
+}
+
+// Highlight active nav link on scroll
+const sections = document.querySelectorAll('.section, .hero');
+const navLinks = document.querySelectorAll('.nav-link');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const id = entry.target.id;
+      const active = document.querySelector(`.nav-link[href="#${id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { threshold: 0.35 });
+
+sections.forEach(s => { if(s.id) observer.observe(s); });
+</script>
+
+</body>
+</html>
