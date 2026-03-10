@@ -682,7 +682,20 @@
         <!-- Campi aggiuntivi per Registro Operatorio -->
         <div id="surgicalFields" style="display:none; grid-column: 1 / -1;">
           <div style="border-top: 2px solid #e2e8f0; margin: 8px 0 16px; padding-top: 16px;">
-            <div style="font-size: 13px; font-weight: 600; color: #764ba2; margin-bottom: 14px;">🔪 Parametri Intervento</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom: 14px;">
+              <div style="font-size: 13px; font-weight: 600; color: #764ba2;">🔪 Parametri Intervento</div>
+              <!-- Toggle formato verbale -->
+              <div style="display:flex; align-items:center; gap:0; border:2px solid #e2e8f0; border-radius:8px; overflow:hidden; font-size:12px; font-weight:600;">
+                <button type="button" id="surgFmtDetailed" onclick="setSurgicalFormat('detailed')"
+                  style="padding:5px 14px; border:none; cursor:pointer; background:#764ba2; color:white; transition:all 0.15s;">
+                  📋 Dettagliato
+                </button>
+                <button type="button" id="surgFmtBrief" onclick="setSurgicalFormat('brief')"
+                  style="padding:5px 14px; border:none; cursor:pointer; background:white; color:#94a3b8; transition:all 0.15s;">
+                  📝 Sintetico
+                </button>
+              </div>
+            </div>
             <div style="display: flex; flex-direction: column; gap: 16px;">
 
               <!-- ACCESSO: chips multipli -->
@@ -825,6 +838,22 @@ Usa questo campo per dettagli tecnici specifici: strumentazione, tappe particola
 <script>
 // API endpoint - Vercel Function
 const API_URL = '/api/generate';
+
+// Formato verbale operatorio: 'detailed' | 'brief'
+let surgicalFormat = 'detailed';
+
+function setSurgicalFormat(fmt) {
+  surgicalFormat = fmt;
+  const btnD = document.getElementById('surgFmtDetailed');
+  const btnB = document.getElementById('surgFmtBrief');
+  if (fmt === 'detailed') {
+    btnD.style.background = '#764ba2'; btnD.style.color = 'white';
+    btnB.style.background = 'white';   btnB.style.color = '#94a3b8';
+  } else {
+    btnB.style.background = '#764ba2'; btnB.style.color = 'white';
+    btnD.style.background = 'white';   btnD.style.color = '#94a3b8';
+  }
+}
 
 function toggleSettings() {
   const content = document.getElementById('settingsContent');
@@ -1082,6 +1111,7 @@ async function generateReport() {
       payload.tipoAccesso = tipoAccesso;
       payload.tipoIntervento = tipoIntervento;
       payload.problematiche = problematiche;
+      payload.surgicalFormat = surgicalFormat;
     }
     
     const response = await fetch(API_URL, {
