@@ -30,19 +30,40 @@ module.exports = async (req, res) => {
     // ── CLINICAL ADVISORY MODE ──────────────────────────────────
     if (mode === 'clinical_advisory') {
       const systemPrompt = getClinicalAdvisoryPrompt(reportType);
-      const userPrompt = `Ecco i dati clinici della paziente:\n\n${cartella}\n\nGenera la valutazione clinica strutturata seguendo esattamente il formato HTML richiesto.`;
-      
+      const userPrompt = `Ecco i dati clinici della paziente:\n\n${cartella}\n\nRestituisci SOLO il JSON richiesto, nessun testo aggiuntivo, nessun blocco markdown.`;
+
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 1800, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 2200, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
       });
       const result = await response.json();
       if (!response.ok) return res.status(response.status).json({ error: result.error?.message || 'Errore API' });
-      const html = result.content[0].text;
+      let raw = result.content[0].text.trim().replace(/^```json\s*/,'').replace(/```$/,'').trim();
+      const parsed = JSON.parse(raw);
       const { input_tokens: inputTokens, output_tokens: outputTokens } = result.usage;
       const cost = ((inputTokens * 0.000003) + (outputTokens * 0.000015)).toFixed(5);
-      return res.status(200).json({ html, usage: { inputTokens, outputTokens, cost } });
+      return res.status(200).json({ json: parsed, usage: { inputTokens, outputTokens, cost } });
+    }
+
+    // ── CLINICAL ADVISORY UPDATE MODE ───────────────────────────
+    if (mode === 'clinical_advisory_update') {
+      const { qaContext } = req.body;
+      const systemPrompt = getClinicalAdvisoryUpdatePrompt(reportType);
+      const userPrompt = `DATI CLINICI ORIGINALI:\n${cartella}\n\nRISPOSTE DEL MEDICO ALLE DOMANDE DI APPROFONDIMENTO:\n${qaContext}\n\nRestituisci SOLO il JSON con il campo "sections" aggiornato. Nessun testo aggiuntivo.`;
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 2000, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+      });
+      const result = await response.json();
+      if (!response.ok) return res.status(response.status).json({ error: result.error?.message || 'Errore API' });
+      let raw = result.content[0].text.trim().replace(/^```json\s*/,'').replace(/```$/,'').trim();
+      const parsed = JSON.parse(raw);
+      const { input_tokens: inputTokens, output_tokens: outputTokens } = result.usage;
+      const cost = ((inputTokens * 0.000003) + (outputTokens * 0.000015)).toFixed(5);
+      return res.status(200).json({ json: parsed, usage: { inputTokens, outputTokens, cost } });
     }
 
     const format = reportFormat || 'complete';
@@ -502,81 +523,72 @@ ${isBrief
 Restituisci SOLO l'HTML.`;
 }
 
+
 // ═══════════════════════════════════════════════════════════════
-// CLINICAL ADVISORY PROMPT
+// CLINICAL ADVISORY PROMPTS
 // ═══════════════════════════════════════════════════════════════
 function getClinicalAdvisoryPrompt(reportType) {
-  const context = reportType === 'obstetric'
-    ? 'paziente ostetrica (gestante o puerpera)'
-    : 'paziente ginecologica ambulatoriale';
-
+  const ctx = reportType === 'obstetric' ? 'paziente ostetrica (gestante o puerpera)' : 'paziente ginecologica ambulatoriale';
   return `Sei un consulente clinico senior specializzato in Ostetricia e Ginecologia.
-Riceverai i dati grezzi di una ${context} inseriti da un medico ginecologo.
-Il tuo compito è fornire una VALUTAZIONE CLINICA STRUTTURATA riservata esclusivamente al medico, NON alla paziente.
+Riceverai i dati grezzi di una ${ctx} inseriti da un medico ginecologo.
 
-REGOLE FONDAMENTALI:
-1. Parla sempre al medico in seconda persona professionale ("si suggerisce di valutare", "si raccomanda").
-2. NON ripetere i dati anamnestici — vai direttamente all'analisi.
-3. NON formulare diagnosi definitive — orienta il ragionamento clinico.
-4. Se i dati sono insufficienti per una sezione, scrivi: "Dati insufficienti per questa sezione."
-5. Sii conciso ma preciso — ogni sezione max 5 bullet point.
-6. Restituisci SOLO l'HTML indicato di seguito, nessun testo aggiuntivo.
+COMPITO: restituire un oggetto JSON con due campi:
+1. "sections": stringa HTML con la valutazione clinica strutturata (6 sezioni)
+2. "questions": array di 2-3 oggetti {q: "domanda", options: ["opzione1","opzione2","opzione3","opzione4"]}
+   Le domande devono riguardare informazioni clinicamente rilevanti assenti nei dati forniti.
+   Le opzioni devono coprire le risposte plausibili in modo mutuamente esclusivo e clinicamente sensato.
+   Esempio: {q: "HPV test eseguito in precedenza?", options: ["Mai eseguito","Negativo < 3 anni fa","Negativo > 3 anni fa","Positivo — genotipo noto"]}
 
-STRUTTURA HTML DA RESTITUIRE:
+REGOLE:
+- Parla al medico (non alla paziente). Usa "si valuti", "si consideri".
+- NON ripetere i dati anamnestici. Analizza e orienta.
+- NON formulare diagnosi definitive.
+- Ogni sezione: max 5 bullet point concisi.
+- Le domande devono essere solo su dati ASSENTI — non chiedere cose già presenti nel testo.
+- Restituisci SOLO JSON valido, nessun testo fuori dal JSON, nessun blocco markdown.
 
+STRUTTURA HTML del campo "sections":
 <div class="advisory-section">
   <div class="advisory-section-title">📋 Sintesi del quadro clinico</div>
-  <div class="advisory-section-body">
-    <p>[2-3 righe: riformula in chiave clinica il quadro complessivo — diagnosi di lavoro, contesto, elementi salienti]</p>
-  </div>
+  <div class="advisory-section-body"><p>[2-3 righe: quadro diagnostico di lavoro, contesto, elementi salienti]</p></div>
 </div>
-
 <div class="advisory-section">
   <div class="advisory-section-title">⚠️ Elementi di attenzione</div>
-  <div class="advisory-section-body">
-    <ul>
-      [Per ogni elemento rilevante: anomalie, valori borderline, fattori di rischio, familiarità oncologica, stile di vita, farmaci, allergie. Se niente di rilevante: "Nessun elemento critico rilevato nel quadro attuale."]
-    </ul>
-  </div>
+  <div class="advisory-section-body"><ul>[anomalie, valori borderline, fattori di rischio, familiarità, stile di vita]</ul></div>
 </div>
-
 <div class="advisory-section">
   <div class="advisory-section-title">🔬 Suggerimenti diagnostici</div>
-  <div class="advisory-section-body">
-    <ul>
-      [Esami strumentali o di laboratorio da considerare — SOLO se non già prescritti nei dati. Motiva brevemente ogni suggerimento. Se il workup appare già completo: "Il piano diagnostico indicato appare adeguato al quadro clinico."]
-    </ul>
-  </div>
+  <div class="advisory-section-body"><ul>[esami da considerare NON già prescritti; se workup completo: "Il piano diagnostico appare adeguato."]</ul></div>
 </div>
-
 <div class="advisory-section">
   <div class="advisory-section-title">💊 Opzioni terapeutiche da valutare</div>
-  <div class="advisory-section-body">
-    <ul>
-      [Approcci terapeutici pertinenti al quadro — farmacologici, procedurali, chirurgici, lifestyle. Menziona le principali alternative. NON prescrivere: orienta la scelta del medico.]
-    </ul>
-  </div>
+  <div class="advisory-section-body"><ul>[approcci farmacologici, procedurali, chirurgici, lifestyle pertinenti — orientare, non prescrivere]</ul></div>
 </div>
-
 <div class="advisory-section">
   <div class="advisory-section-title">📅 Follow-up raccomandato</div>
-  <div class="advisory-section-body">
-    <ul>
-      [Timing e contenuto dei controlli successivi, esami da ripetere, soglie di escalation verso specialisti o setting ospedaliero]
-    </ul>
-  </div>
+  <div class="advisory-section-body"><ul>[timing controlli, esami da ripetere, soglie di escalation]</ul></div>
 </div>
-
 <div class="advisory-section">
-  <div class="advisory-section-title">❓ Informazioni mancanti che potrebbero modificare il ragionamento</div>
-  <div class="advisory-section-body">
-    <ul>
-      [Dati non forniti ma clinicamente rilevanti: es. BMI non specificato, fumo non indagato, HPV status ignoto, risultati precedenti non riportati, farmaci non elencati. Se i dati sono completi: "Il quadro clinico fornito appare sufficientemente documentato."]
-    </ul>
-  </div>
+  <div class="advisory-section-title">❓ Informazioni mancanti rilevanti</div>
+  <div class="advisory-section-body"><ul>[dati assenti che potrebbero modificare il ragionamento; se dati completi: "Quadro sufficientemente documentato."]</ul></div>
 </div>
+<div class="advisory-disclaimer">⚕️ Valutazione generata da intelligenza artificiale (Claude — Anthropic) a esclusivo supporto decisionale del medico. Non costituisce diagnosi né prescrizione. La responsabilità clinica rimane integralmente del professionista sanitario.</div>`;
+}
 
-<div class="advisory-disclaimer">
-  ⚕️ Valutazione generata da intelligenza artificiale (Claude — Anthropic) a esclusivo supporto decisionale del medico. Non costituisce diagnosi né prescrizione. La responsabilità clinica rimane integralmente del professionista sanitario.
-</div>`;
+function getClinicalAdvisoryUpdatePrompt(reportType) {
+  const ctx = reportType === 'obstetric' ? 'ostetrica' : 'ginecologica';
+  return `Sei un consulente clinico senior in Ostetricia e Ginecologia.
+Riceverai: dati clinici originali di una paziente ${ctx} + risposte del medico a domande di approfondimento.
+
+COMPITO: restituire un oggetto JSON con un solo campo:
+"sections": stringa HTML con la valutazione clinica AGGIORNATA (stesse 6 sezioni), integrata con le nuove informazioni fornite dalle risposte.
+
+REGOLE:
+- Integra le risposte nel ragionamento senza ripeterle letteralmente.
+- Aggiorna TUTTE le sezioni che risultano influenzate dalle nuove informazioni.
+- Mantieni la stessa struttura HTML delle 6 sezioni + advisory-disclaimer finale.
+- Restituisci SOLO JSON valido, nessun testo fuori dal JSON, nessun blocco markdown.
+- NON generare nuove domande — solo le sezioni aggiornate.
+
+Usa la stessa struttura HTML della valutazione precedente (advisory-section, advisory-section-title, advisory-section-body, advisory-disclaimer).`;
 }
