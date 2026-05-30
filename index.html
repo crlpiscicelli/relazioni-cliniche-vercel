@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Generatore Relazioni Cliniche AI</title>
 
-<!-- Google tag (gtag.js) -->
 <!-- GA_PLACEHOLDER_START -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-VEQS9NREWP"></script>
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-VEQS9NREWP');
-</script>
+  gtag('config', 'G-XXXXXXXXXX');
+</script> -->
 <!-- GA_PLACEHOLDER_END -->
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&display=swap');
   
@@ -38,583 +38,616 @@
     box-shadow: 0 4px 24px rgba(0,0,0,0.1);
   }
   
-  .app-title {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 8px;
-  }
-  
-  .app-subtitle {
-    font-size: 14px;
-    color: #64748b;
-  }
+  .app-title { font-size: 28px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+  .app-subtitle { font-size: 14px; color: #64748b; }
   
   .cloud-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    margin-top: 8px;
-    background: #d1fae5;
-    color: #065f46;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    margin-top: 8px; background: #d1fae5; color: #065f46;
   }
   
+  /* ── Pannelli collassabili ── */
   .settings-panel {
     background: rgba(255,255,255,0.95);
     backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 20px 24px;
-    margin-bottom: 24px;
+    border-radius: 12px; padding: 20px 24px;
+    margin-bottom: 16px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.1);
   }
   
   .settings-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #e2e8f0;
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; padding-bottom: 16px; border-bottom: 2px solid #e2e8f0;
   }
   
-  .settings-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1e293b;
-  }
+  .settings-title { font-size: 18px; font-weight: 600; color: #1e293b; }
+  .settings-toggle { font-size: 20px; transition: transform 0.3s; }
+  .settings-toggle.collapsed { transform: rotate(-90deg); }
   
-  .settings-toggle {
-    font-size: 20px;
-    transition: transform 0.3s;
-  }
-  
-  .settings-toggle.collapsed {
-    transform: rotate(-90deg);
-  }
-  
-  .settings-content {
-    max-height: 1200px;
-    overflow: visible;
-    transition: max-height 0.4s ease-out;
-  }
-  
-  .settings-content.collapsed {
-    max-height: 0;
-  }
+  .settings-content { max-height: 2000px; overflow: visible; transition: max-height 0.4s ease-out; }
+  .settings-content.collapsed { max-height: 0; overflow: hidden; }
   
   .settings-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    padding-top: 20px;
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 20px; padding-top: 20px;
   }
   
-  .setting-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+  .setting-group { display: flex; flex-direction: column; gap: 8px; }
   
   .setting-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #475569;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 13px; font-weight: 600; color: #475569;
+    text-transform: uppercase; letter-spacing: 0.5px;
   }
   
   .setting-input, .setting-select, .setting-textarea {
-    padding: 10px 14px;
-    border: 2px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 14px;
-    font-family: inherit;
+    padding: 10px 14px; border: 2px solid #e2e8f0;
+    border-radius: 6px; font-size: 14px; font-family: inherit;
     transition: border-color 0.2s;
   }
   
   .setting-input:focus, .setting-select:focus, .setting-textarea:focus {
-    outline: none;
-    border-color: #667eea;
+    outline: none; border-color: #667eea;
   }
   
-  .setting-textarea {
-    resize: vertical;
-    min-height: 80px;
-    font-family: 'Courier New', monospace;
+  .setting-textarea { resize: vertical; min-height: 80px; font-family: 'Courier New', monospace; }
+  
+  /* ── BOTTONE COUNSELING (nell'input panel) ── */
+  .btn-counseling {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+    border: 2px solid #7dd3fc; color: #0369a1;
+    cursor: pointer; transition: all 0.2s; font-family: inherit;
+  }
+  .btn-counseling:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,165,233,0.35); }
+  .btn-counseling .c-badge {
+    background: #0ea5e9; color: white; border-radius: 10px;
+    padding: 1px 8px; font-size: 11px; font-weight: 700; display: none;
+  }
+  .btn-counseling .c-badge.visible { display: inline-block; }
+
+  /* ── MODAL COUNSELING ── */
+  #counselingOverlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 4000;
+    align-items: flex-start; justify-content: center;
+    padding: 20px; overflow-y: auto;
+  }
+  .cm-modal {
+    background: white; border-radius: 16px; width: 100%; max-width: 1000px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.3); margin: auto;
+  }
+  .cm-header {
+    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    color: white; padding: 20px 28px; border-radius: 16px 16px 0 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .cm-header-title { font-size: 20px; font-weight: 700; }
+  .cm-header-sub { font-size: 12px; opacity: 0.8; margin-top: 3px; }
+  .cm-body { display: grid; grid-template-columns: 1fr 360px; min-height: 500px; }
+  .cm-left { padding: 24px; border-right: 2px solid #e2e8f0; }
+  .cm-right { padding: 24px; background: #f8fafc; border-radius: 0 0 0 0; }
+  
+  /* Tab pacchetti */
+  .cm-tabs { display: flex; gap: 0; border-bottom: 2px solid #e2e8f0; margin-bottom: 16px; }
+  .cm-tab {
+    padding: 8px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+    border: none; background: none; color: #64748b; border-bottom: 3px solid transparent;
+    margin-bottom: -2px; font-family: inherit; transition: all 0.15s;
+  }
+  .cm-tab.active { color: #0369a1; border-bottom-color: #0ea5e9; }
+  
+  /* Package cards */
+  .cm-pkg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .cm-pkg-card {
+    padding: 12px 14px; border-radius: 10px; border: 2px solid #e2e8f0;
+    background: white; cursor: pointer; transition: all 0.15s; text-align: left;
+    font-family: inherit;
+  }
+  .cm-pkg-card:hover { border-color: #7dd3fc; background: #f0f9ff; }
+  .cm-pkg-card.active { border-color: #0ea5e9; background: #e0f2fe; }
+  .cm-pkg-card.partial { border-color: #7dd3fc; background: #f0f9ff; }
+  .cm-pkg-icon { font-size: 20px; margin-bottom: 4px; }
+  .cm-pkg-name { font-size: 12px; font-weight: 700; color: #0c4a6e; line-height: 1.3; }
+  .cm-pkg-count { font-size: 10px; color: #64748b; margin-top: 2px; }
+  .cm-pkg-check { float: right; font-size: 14px; color: #0ea5e9; display: none; }
+  .cm-pkg-card.active .cm-pkg-check { display: inline; }
+
+  /* Configuratore tema libero */
+  .cm-right-title {
+    font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 16px;
+    padding-bottom: 10px; border-bottom: 2px solid #e2e8f0;
+  }
+  .cm-field { margin-bottom: 14px; }
+  .cm-label { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; }
+  .cm-input, .cm-select, .cm-textarea {
+    width: 100%; padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 8px;
+    font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s;
+    background: white;
+  }
+  .cm-input:focus, .cm-select:focus, .cm-textarea:focus { border-color: #0ea5e9; }
+  .cm-textarea { resize: vertical; min-height: 70px; }
+  .cm-tone-hint { font-size: 11px; color: #64748b; font-style: italic; margin-top: 4px; line-height: 1.4; }
+  .btn-add-topic {
+    width: 100%; padding: 10px; background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: opacity 0.2s; margin-top: 4px;
+  }
+  .btn-add-topic:hover { opacity: 0.9; }
+
+  /* Footer modale */
+  .cm-footer {
+    border-top: 2px solid #e2e8f0; padding: 16px 24px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    border-radius: 0 0 16px 16px; background: #f8fafc;
+  }
+  .cm-active-list { flex: 1; min-width: 0; }
+  .cm-active-title { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 6px; }
+  .cm-active-items { display: flex; flex-wrap: wrap; gap: 4px; max-height: 80px; overflow-y: auto; }
+  .cm-active-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500;
+    background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc;
+  }
+  .cm-active-chip.custom-chip { background: #fdf4ff; color: #7e22ce; border-color: #d8b4fe; }
+  .cm-active-chip .rm { cursor: pointer; font-weight: 700; margin-left: 2px; opacity: 0.6; }
+  .cm-active-chip .rm:hover { opacity: 1; }
+  .btn-cm-apply {
+    padding: 11px 28px; background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: inherit; white-space: nowrap;
+  }
+  .btn-cm-apply:hover { opacity: 0.9; }
+  .btn-cm-clear { padding: 11px 18px; background: white; color: #64748b; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .btn-cm-clear:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+
+  @media (max-width: 768px) {
+    .cm-body { grid-template-columns: 1fr; }
+    .cm-left { border-right: none; border-bottom: 2px solid #e2e8f0; }
+    .cm-pkg-grid { grid-template-columns: repeat(2, 1fr); }
   }
   
+  /* ── BADGE EG ── */
+  .eg-badge-container {
+    margin-top: 10px; min-height: 32px;
+  }
+  
+  .eg-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 20px;
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    border: 2px solid #6ee7b7; color: #065f46;
+    font-size: 14px; font-weight: 700;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .eg-badge-detail {
+    font-size: 11px; font-weight: 400; color: #047857;
+    margin-left: 4px;
+  }
+  
+  .btn-regolo {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid #fbbf24; color: #92400e;
+    cursor: pointer; transition: all 0.2s; font-family: inherit;
+  }
+  .btn-regolo:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(251,191,36,0.4); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── MODAL REGOLO (nuovo) ── */
+  #regoloOverlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); z-index: 3000;
+    align-items: flex-start; justify-content: center;
+    padding: 20px; overflow-y: auto;
+  }
+  .regolo-modal {
+    background: white; border-radius: 16px;
+    width: 100%; max-width: 1100px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+    margin: auto;
+  }
+  .regolo-header {
+    background: linear-gradient(135deg, #1b2d4f, #2c5f8d);
+    color: white; padding: 18px 28px; border-radius: 16px 16px 0 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .regolo-title { font-size: 18px; font-weight: 700; }
+  .regolo-subtitle { font-size: 12px; opacity: 0.75; margin-top: 2px; }
+
+  /* Layout a due colonne */
+  .regolo-body {
+    display: grid; grid-template-columns: 420px 1fr;
+    min-height: 480px;
+  }
+
+  /* ── Sinistra: configuratore ── */
+  .regolo-config {
+    padding: 20px 22px; border-right: 2px solid #e2e8f0;
+    overflow-y: auto; max-height: 70vh;
+  }
+  .regolo-config-title {
+    font-size: 13px; font-weight: 700; color: #1e293b;
+    margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .appt-row {
+    display: grid; grid-template-columns: 1fr 52px 52px 32px;
+    gap: 6px; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid #f1f5f9;
+  }
+  .appt-row.disabled { opacity: 0.4; }
+  .appt-name {
+    font-size: 12px; font-weight: 500; color: #1e293b;
+    line-height: 1.3;
+  }
+  .appt-week-input {
+    width: 100%; padding: 4px 6px; border: 1.5px solid #e2e8f0;
+    border-radius: 5px; font-size: 12px; text-align: center;
+    font-family: inherit; outline: none;
+  }
+  .appt-week-input:focus { border-color: #2c5f8d; }
+  .appt-toggle {
+    width: 28px; height: 28px; border-radius: 6px; border: 2px solid #e2e8f0;
+    background: white; cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .appt-toggle.on { background: #2c5f8d; border-color: #2c5f8d; color: white; }
+  .appt-toggle.off { color: #cbd5e1; }
+  .appt-labels {
+    display: grid; grid-template-columns: 1fr 52px 52px 32px;
+    gap: 6px; margin-bottom: 4px;
+  }
+  .appt-label-text {
+    font-size: 10px; font-weight: 700; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.5px; text-align: center;
+  }
+  .btn-add-appt {
+    width: 100%; margin-top: 12px; padding: 8px;
+    border: 2px dashed #cbd5e1; border-radius: 8px;
+    background: #f8fafc; color: #64748b;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: all 0.15s;
+  }
+  .btn-add-appt:hover { border-color: #2c5f8d; color: #2c5f8d; background: #f0f7ff; }
+
+  /* ── Destra: anteprima calendario ── */
+  .regolo-preview {
+    padding: 20px 22px; background: #f8fafc;
+    border-radius: 0 0 16px 0; overflow-y: auto; max-height: 70vh;
+  }
+  .regolo-preview-title {
+    font-size: 13px; font-weight: 700; color: #1e293b;
+    margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .appt-preview-table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+  }
+  .appt-preview-table thead th {
+    background: #1b2d4f; color: white;
+    padding: 7px 10px; text-align: left;
+    font-size: 10px; text-transform: uppercase;
+    font-weight: 700; letter-spacing: 0.5px;
+  }
+  .appt-preview-table tbody td {
+    padding: 7px 10px; border-bottom: 1px solid #e8ecf0;
+    vertical-align: middle;
+  }
+  .appt-preview-table tbody tr:nth-child(even) td { background: #f1f5f9; }
+  .appt-preview-table tbody tr.appt-past td { color: #94a3b8; }
+  .appt-preview-table tbody tr.appt-soon td {
+    background: #fef9c3 !important; font-weight: 600;
+  }
+  .appt-preview-table tbody tr.appt-current td {
+    background: #fef3c7 !important; font-weight: 700;
+    border-left: 3px solid #f59e0b;
+  }
+  .appt-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 8px;
+    font-size: 10px; font-weight: 600;
+  }
+  .appt-tag.eco { background: #dbeafe; color: #1e40af; }
+  .appt-tag.screen { background: #dcfce7; color: #166534; }
+  .appt-tag.vac { background: #fdf4ff; color: #7e22ce; }
+  .appt-tag.parto { background: #fef3c7; color: #92400e; }
+  .appt-tag.visita { background: #f0fdf4; color: #15803d; }
+
+  .regolo-footer {
+    padding: 14px 22px; border-top: 2px solid #e2e8f0;
+    display: flex; gap: 10px; justify-content: flex-end;
+    align-items: center; background: #f8fafc;
+    border-radius: 0 0 16px 16px;
+  }
+  .no-um-warning {
+    text-align: center; padding: 40px 20px; color: #94a3b8;
+    font-size: 13px; line-height: 1.6;
+  }
+
+  @media (max-width: 900px) {
+    .regolo-body { grid-template-columns: 1fr; }
+    .regolo-config { border-right: none; border-bottom: 2px solid #e2e8f0; max-height: none; }
+    .regolo-preview { max-height: none; }
+  }
+  
+  .trim-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 8px;
+    font-size: 10px; font-weight: 700;
+  }
+  .trim-I { background: #ede9fe; color: #7c3aed; }
+  .trim-II { background: #dbeafe; color: #1d4ed8; }
+  .trim-III { background: #dcfce7; color: #15803d; }
+  
+  .event-chip {
+    display: inline-block; padding: 2px 8px; border-radius: 8px;
+    font-size: 10px; font-weight: 600; background: #fef3c7; color: #92400e;
+    margin: 1px;
+  }
+  .event-chip.eco { background: #dbeafe; color: #1e40af; }
+  .event-chip.screen { background: #f0fdf4; color: #166534; }
+  .event-chip.vac { background: #fdf4ff; color: #7e22ce; }
+  
+  /* ── Main layout ── */
   .main-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: 24px;
-    align-items: start;
-  }
-  
-  @media (max-width: 1400px) {
-    .main-grid { grid-template-columns: 1fr; }
-    .settings-grid { grid-template-columns: 1fr; }
+    display: grid; grid-template-columns: 1fr 1.2fr;
+    gap: 24px; align-items: start;
   }
   
   .panel {
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 24px;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+    border-radius: 12px; padding: 24px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.1);
   }
   
   .panel-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
+    font-size: 18px; font-weight: 600; color: #1e293b;
+    margin-bottom: 16px; padding-bottom: 12px;
     border-bottom: 2px solid #e2e8f0;
   }
   
   .input-area {
-    width: 100%;
-    min-height: 400px;
-    padding: 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    resize: vertical;
-    transition: border-color 0.2s;
+    width: 100%; min-height: 400px; padding: 16px;
+    border: 2px solid #e2e8f0; border-radius: 8px;
+    font-family: 'Courier New', monospace; font-size: 12px;
+    resize: vertical; transition: border-color 0.2s;
   }
-  
-  .input-area:focus {
-    outline: none;
-    border-color: #667eea;
-  }
+  .input-area:focus { outline: none; border-color: #667eea; }
   
   .btn-primary {
-    width: 100%;
-    padding: 14px 24px;
+    width: 100%; padding: 14px 24px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
+    color: white; border: none; border-radius: 8px;
+    font-size: 16px; font-weight: 600; cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
-    margin-top: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    margin-top: 16px; display: flex; align-items: center;
+    justify-content: center; gap: 8px;
   }
-  
   .btn-primary:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+    transform: translateY(-2px); box-shadow: 0 8px 16px rgba(102,126,234,0.4);
   }
-  
-  .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
   
   .btn-secondary {
-    padding: 10px 20px;
-    background: white;
-    color: #667eea;
-    border: 2px solid #667eea;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-right: 12px;
+    padding: 10px 20px; background: white; color: #667eea;
+    border: 2px solid #667eea; border-radius: 6px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; margin-right: 12px;
   }
+  .btn-secondary:hover { background: #667eea; color: white; }
   
-  .btn-secondary:hover {
-    background: #667eea;
-    color: white;
-  }
-  
-  .output-container {
-    position: sticky;
-    top: 20px;
-  }
+  .output-container { position: sticky; top: 20px; }
   
   .output-actions {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
+    display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
   }
   
   .preview-frame {
-    background: white;
-    border-radius: 8px;
-    padding: 40px;
+    background: white; border-radius: 8px; padding: 40px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.1);
-    max-height: 75vh;
-    overflow-y: auto;
-    position: relative;
+    max-height: 75vh; overflow-y: auto; position: relative;
   }
-  
-  .preview-frame[contenteditable="true"] {
-    border: 2px dashed #667eea;
-  }
+  .preview-frame[contenteditable="true"] { border: 2px dashed #667eea; }
   
   .edit-badge {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: #667eea;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    position: absolute; top: 8px; right: 8px;
+    background: #667eea; color: white;
+    padding: 4px 12px; border-radius: 4px;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
   }
   
-  .empty-state {
-    text-align: center;
-    padding: 80px 40px;
-    color: #94a3b8;
-  }
+  .empty-state { text-align: center; padding: 80px 40px; color: #94a3b8; }
+  .empty-state-icon { font-size: 64px; margin-bottom: 16px; }
   
-  .empty-state-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
-  }
+  /* ── Report styles ── */
+  .report { font-family: 'Source Serif 4', Georgia, serif; font-size: 10.8pt; line-height: 1.62; color: #1e1e1e; }
+  .report-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2.5px solid #1b2d4f; padding-bottom: 12px; margin-bottom: 8px; }
+  .report-institution { font-size: 13pt; font-weight: 700; color: #1b2d4f; }
+  .report-department { font-size: 9pt; color: #6b7a8d; font-style: italic; margin-top: 4px; }
+  .report-date { font-size: 9pt; color: #8a95a3; text-align: right; }
+  .report-title { text-align: center; font-size: 14pt; font-weight: 700; color: #1b2d4f; letter-spacing: 1.5px; text-transform: uppercase; padding: 14px 0 4px; }
+  .report-subtitle { text-align: center; font-size: 9pt; color: #8a95a3; margin-bottom: 20px; }
+  .patient-card { background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%); border: 1px solid #dce4ed; border-radius: 8px; padding: 18px 22px; margin-bottom: 24px; }
+  .patient-name { font-size: 16pt; font-weight: 700; color: #1b2d4f; border-bottom: 1px solid #cdd5e0; padding-bottom: 10px; margin-bottom: 12px; }
+  .patient-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 24px; }
+  .patient-field { margin-bottom: 8px; }
+  .patient-label { font-size: 7.5pt; text-transform: uppercase; color: #8a95a3; letter-spacing: 0.7px; display: block; }
+  .patient-value { font-size: 10pt; font-weight: 600; color: #1e1e1e; margin-top: 2px; }
+  .report h2 { font-size: 11pt; font-weight: 700; color: #1b2d4f; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1.5px solid #1b2d4f; padding-bottom: 5px; margin: 22px 0 10px; }
+  .report h3 { font-size: 10.5pt; font-weight: 600; color: #2c4268; margin: 16px 0 6px; padding-left: 11px; border-left: 3px solid #1b2d4f; }
+  .report p { text-align: justify; margin-bottom: 8px; }
+  .report strong { color: #1b2d4f; }
+  .report-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 10px 0 16px; }
+  .report-table thead th { background: #1b2d4f; color: white; padding: 6px 9px; text-align: left; font-size: 7.5pt; text-transform: uppercase; font-weight: 600; }
+  .report-table tbody td { padding: 5px 9px; border-bottom: 1px solid #e8ecf0; vertical-align: top; }
+  .report-table tbody tr:nth-child(even) td { background: #f8fafb; }
+  .alert { border-radius: 6px; padding: 12px 16px; margin: 14px 0; font-size: 10pt; line-height: 1.55; }
+  .alert-info { background: #f0f7ff; border: 1px solid #b8d4f0; border-left: 4px solid #2980b9; }
+  .signature-block { display: flex; justify-content: space-between; margin-top: 48px; padding-top: 8px; }
+  .signature-line { height: 40px; border-bottom: 1px solid #333; }
+  .signature-label { font-size: 8pt; color: #8a95a3; margin-top: 4px; }
   
-  .report {
-    font-family: 'Source Serif 4', Georgia, serif;
-    font-size: 10.8pt;
-    line-height: 1.62;
-    color: #1e1e1e;
-  }
+  .loader { display: none; text-align: center; padding: 40px; }
+  .loader.active { display: block; }
+  .spinner { border: 4px solid #f3f4f6; border-top: 4px solid #667eea; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   
-  .report-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    border-bottom: 2.5px solid #1b2d4f;
-    padding-bottom: 12px;
-    margin-bottom: 8px;
-  }
+  .cost-estimate { font-size: 12px; color: #64748b; margin-top: 8px; text-align: center; }
   
-  .report-institution {
-    font-size: 13pt;
-    font-weight: 700;
-    color: #1b2d4f;
-  }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transform: translateY(20px); transition: all 0.3s; pointer-events: none; z-index: 1000; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { background: #dc2626; }
   
-  .report-department {
-    font-size: 9pt;
-    color: #6b7a8d;
-    font-style: italic;
-    margin-top: 4px;
-  }
-  
-  .report-date {
-    font-size: 9pt;
-    color: #8a95a3;
-    text-align: right;
-  }
-  
-  .report-title {
-    text-align: center;
-    font-size: 14pt;
-    font-weight: 700;
-    color: #1b2d4f;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    padding: 14px 0 4px;
-  }
-  
-  .report-subtitle {
-    text-align: center;
-    font-size: 9pt;
-    color: #8a95a3;
-    margin-bottom: 20px;
-  }
-  
-  .patient-card {
-    background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%);
-    border: 1px solid #dce4ed;
-    border-radius: 8px;
-    padding: 18px 22px;
-    margin-bottom: 24px;
-  }
-  
-  .patient-name {
-    font-size: 16pt;
-    font-weight: 700;
-    color: #1b2d4f;
-    border-bottom: 1px solid #cdd5e0;
-    padding-bottom: 10px;
-    margin-bottom: 12px;
-  }
-  
-  .patient-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px 24px;
-  }
-  
-  .patient-field {
-    margin-bottom: 8px;
-  }
-  
-  .patient-label {
-    font-size: 7.5pt;
-    text-transform: uppercase;
-    color: #8a95a3;
-    letter-spacing: 0.7px;
-    display: block;
-  }
-  
-  .patient-value {
-    font-size: 10pt;
-    font-weight: 600;
-    color: #1e1e1e;
-    margin-top: 2px;
-  }
-  
-  .report h2 {
-    font-size: 11pt;
-    font-weight: 700;
-    color: #1b2d4f;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-bottom: 1.5px solid #1b2d4f;
-    padding-bottom: 5px;
-    margin: 22px 0 10px;
-  }
-  
-  .report h3 {
-    font-size: 10.5pt;
-    font-weight: 600;
-    color: #2c4268;
-    margin: 16px 0 6px;
-    padding-left: 11px;
-    border-left: 3px solid #1b2d4f;
-  }
-  
-  .report p {
-    text-align: justify;
-    margin-bottom: 8px;
-  }
-  
-  .report strong {
-    color: #1b2d4f;
-  }
-  
-  .report-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 9pt;
-    margin: 10px 0 16px;
-  }
-  
-  .report-table thead th {
-    background: #1b2d4f;
-    color: white;
-    padding: 6px 9px;
-    text-align: left;
-    font-size: 7.5pt;
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-  
-  .report-table tbody td {
-    padding: 5px 9px;
-    border-bottom: 1px solid #e8ecf0;
-    vertical-align: top;
-  }
-  
-  .report-table tbody tr:nth-child(even) td {
-    background: #f8fafb;
-  }
-  
-  .alert {
-    border-radius: 6px;
-    padding: 12px 16px;
-    margin: 14px 0;
-    font-size: 10pt;
-    line-height: 1.55;
-  }
-  
-  .alert-info {
-    background: #f0f7ff;
-    border: 1px solid #b8d4f0;
-    border-left: 4px solid #2980b9;
-  }
-  
-  .signature-block {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 48px;
-    padding-top: 8px;
-  }
-  
-  .signature-line {
-    height: 40px;
-    border-bottom: 1px solid #333;
-  }
-  
-  .signature-label {
-    font-size: 8pt;
-    color: #8a95a3;
-    margin-top: 4px;
-  }
-  
-  .loader {
-    display: none;
-    text-align: center;
-    padding: 40px;
-  }
-  
-  .loader.active {
-    display: block;
-  }
-  
-  .spinner {
-    border: 4px solid #f3f4f6;
-    border-top: 4px solid #667eea;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 16px;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
-  .cost-estimate {
-    font-size: 12px;
-    color: #64748b;
-    margin-top: 8px;
-    text-align: center;
-  }
-  
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: #1e293b;
-    color: white;
-    padding: 16px 24px;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.3s;
-    pointer-events: none;
-    z-index: 1000;
-  }
-  
-  .toast.show {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  
-  .toast.error {
-    background: #dc2626;
-  }
-
-  /* ── Access & Pathology Chips ── */
+  /* Chips chirurgia */
   .access-chip, .patologia-chip {
-    padding: 7px 14px;
-    border-radius: 20px;
-    border: 2px solid #d1d5db;
-    background: white;
-    font-size: 13px;
-    font-weight: 500;
-    color: #475569;
-    cursor: pointer;
-    transition: all 0.18s;
-    white-space: nowrap;
-    font-family: inherit;
+    padding: 7px 14px; border-radius: 20px; border: 2px solid #d1d5db;
+    background: white; font-size: 13px; font-weight: 500; color: #475569;
+    cursor: pointer; transition: all 0.18s; white-space: nowrap; font-family: inherit;
   }
   .access-chip:hover { border-color: #764ba2; color: #764ba2; }
-  .access-chip.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: transparent;
-    color: white;
-    box-shadow: 0 2px 8px rgba(102,126,234,0.35);
-  }
+  .access-chip.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-color: transparent; color: white; box-shadow: 0 2px 8px rgba(102,126,234,0.35); }
   .patologia-chip { border-color: #c7d2fe; color: #3730a3; background: #f5f3ff; }
   .patologia-chip:hover { border-color: #764ba2; background: #ede9fe; }
-  .patologia-chip.active {
-    background: #4f46e5;
-    border-color: transparent;
-    color: white;
-    box-shadow: 0 2px 8px rgba(79,70,229,0.3);
+  .patologia-chip.active { background: #4f46e5; border-color: transparent; color: white; box-shadow: 0 2px 8px rgba(79,70,229,0.3); }
+  
+  @media (max-width: 1400px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .settings-grid { grid-template-columns: 1fr; }
+    .counseling-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  
+  @media (max-width: 768px) {
+    .counseling-grid { grid-template-columns: 1fr; }
+  }
+  
+  @media print {
+    body { background: white !important; padding: 0 !important; }
+    .container { max-width: none !important; margin: 0 !important; }
+    .app-header, .settings-panel, .panel-title, .output-actions, .edit-badge, .loader, .empty-state, .toast, #regoloOverlay, #counselingOverlay { display: none !important; }
+    .main-grid > .panel { display: none !important; }
+    .main-grid { display: block !important; }
+    .output-container { position: static !important; }
+    .output-container > .panel { background: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+    .preview-frame { box-shadow: none !important; padding: 0 !important; max-height: none !important; border: none !important; overflow: visible !important; }
   }
 
-  @media print {
-    body { 
-      background: white !important; 
-      padding: 0 !important; 
-    }
-    .container {
-      max-width: none !important;
-      margin: 0 !important;
-    }
-    .app-header, 
-    .settings-panel, 
-    .panel-title,
-    .output-actions, 
-    .edit-badge,
-    .loader,
-    .empty-state,
-    .toast {
-      display: none !important;
-    }
-    .main-grid > .panel {
-      display: none !important;
-    }
-    .main-grid {
-      display: block !important;
-    }
-    .output-container {
-      position: static !important;
-    }
-    .output-container > .panel {
-      background: none !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-    .preview-frame {
-      box-shadow: none !important;
-      padding: 0 !important;
-      max-height: none !important;
-      border: none !important;
-      overflow: visible !important;
-    }
-    .report {
-      display: block !important;
-      visibility: visible !important;
-    }
+  /* ── TEMPLATE BUTTONS ── */
+  .template-btn {
+    padding: 6px 13px; border-radius: 16px; border: 1.5px solid #2c5f8d;
+    background: white; color: #2c5f8d; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.18s; font-family: inherit; white-space: nowrap;
   }
-</style>
+  .template-btn:hover { background: #2c5f8d; color: white; transform: translateY(-1px); }
+
+  /* ── PARSING BADGES ── */
+  .parse-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 0; }
+  .parse-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+    animation: fadeIn 0.25s ease;
+  }
+  .parse-badge.age    { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+  .parse-badge.bmi    { background: #fef9c3; color: #92400e; border: 1px solid #fcd34d; }
+  .parse-badge.bmi-warn { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+  .parse-badge.smoke  { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+  .parse-badge.parity { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
+  .parse-badge.um     { background: #fdf4ff; color: #7e22ce; border: 1px solid #d8b4fe; }
+  .parse-badge.pap    { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+  .parse-badge.eco    { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
+  .parse-badge.famil  { background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; }
+
+  /* ── RX CHIPS ── */
+  .rx-section {
+    margin-top: 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; overflow: hidden;
+  }
+  .rx-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 14px; background: #f8fafc; cursor: pointer; user-select: none;
+  }
+  .rx-header-left { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #1e293b; }
+  .rx-count { background: #2c5f8d; color: white; border-radius: 10px; padding: 1px 7px; font-size: 10px; display: none; }
+  .rx-count.vis { display: inline-block; }
+  .rx-body { padding: 12px 14px; display: none; }
+  .rx-body.open { display: block; }
+  .rx-cat-title { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 5px; }
+  .rx-cat-title:first-child { margin-top: 0; }
+  .rx-chips-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 4px; }
+  .rx-chip {
+    padding: 4px 11px; border-radius: 14px; border: 1.5px solid #cbd5e1;
+    background: white; color: #475569; font-size: 11px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+  }
+  .rx-chip:hover { border-color: #2c5f8d; color: #2c5f8d; }
+  .rx-chip.sel { background: #2c5f8d; border-color: #2c5f8d; color: white; }
+  .rx-selected-area {
+    margin-top: 10px; padding: 8px 10px; background: #f0f7ff;
+    border-radius: 8px; border: 1.5px dashed #7dd3fc; display: none;
+  }
+  .rx-selected-title { font-size: 10px; font-weight: 700; color: #0369a1; margin-bottom: 5px; text-transform: uppercase; }
+  .rx-sel-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .rx-sel-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 12px; font-size: 11px;
+    background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd;
+  }
+  .rx-sel-rm { cursor: pointer; font-weight: 700; opacity: 0.6; }
+  .rx-sel-rm:hover { opacity: 1; }
+
+  /* ── AI DISCLAIMER ── */
+  .ai-disclaimer-row {
+    display: flex; align-items: center; gap: 8px; margin-top: 10px;
+    padding: 8px 12px; background: #f8fafc; border-radius: 8px;
+    border: 1.5px solid #e2e8f0;
+  }
+  .ai-disclaimer-row label { font-size: 12px; color: #475569; cursor: pointer; line-height: 1.4; }
+
+  /* Print: hide rx section and badges, show disclaimer */
+  @media print {
+    .rx-section, .parse-badges, .template-btn, #templateSection { display: none !important; }
+    .ai-disclaimer-note { display: block !important; }
+  }
+  .ai-disclaimer-note {
+    display: none;
+    font-size: 7.5pt; font-style: italic; color: #8a95a3;
+    margin-top: 24px; padding-top: 10px;
+    border-top: 1px solid #e2e8f0; text-align: center;
+  }
+
+  /* Print: ensure disclaimer note prints if included in report */
+  @media print {
+    .ai-disclaimer-note-report { display: block !important; }
+  }
+
+  /* Print: hide new elements */
+  @media print {
+    #templateSection, .parse-badges, .rx-section, .ai-disclaimer-row { display: none !important; }
+  }
+
+  /* ── INCLUDI REGOLO checkbox (già esistente, assicuro visibilità) ── */
+  .regolo-print-row {
+    display: flex; align-items: center; gap: 8px; margin-top: 8px;
+    font-size: 12px; color: #475569;
+  }
+
+
 </head>
 <body>
 
 <div class="container">
+
+  <!-- ═══ HEADER ═══ -->
   <div class="app-header">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
       <div>
         <div class="app-title">🏥 Generatore Relazioni Cliniche AI</div>
-        <div class="app-subtitle">Powered by Claude API su Vercel · Relazioni complete senza limiti di timeout</div>
+        <div class="app-subtitle">Powered by Claude API su Vercel · EG automatica · Regolo ostetrico · Counseling integrato</div>
         <div style="display:flex; align-items:center; gap:10px; margin-top:8px; flex-wrap:wrap;">
           <div class="cloud-badge"><span>⚡</span><span>Deploy su Vercel</span></div>
           <a href="guida.html" target="_blank" style="display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:#e0f2fe; color:#0369a1; text-decoration:none;">📖 Guida all'uso</a>
@@ -628,6 +661,7 @@
     </div>
   </div>
   
+  <!-- ═══ CONFIGURAZIONE ═══ -->
   <div class="settings-panel">
     <div class="settings-header" onclick="toggleSettings()">
       <div class="settings-title">⚙️ Configurazione</div>
@@ -664,7 +698,7 @@
           </select>
         </div>
         
-        <div class="setting-group" id="customHeaderGroup" style="display: none; grid-column: 1 / -1;">
+        <div class="setting-group" id="customHeaderGroup" style="display:none; grid-column: 1 / -1;">
           <label class="setting-label">Intestazione Personalizzata</label>
           <textarea id="customHeader" class="setting-textarea" placeholder="Istituzione&#10;Dipartimento / Reparto (opzionale)"></textarea>
         </div>
@@ -676,29 +710,32 @@
 
         <div class="setting-group" id="qualificaGroup" style="grid-column: 1 / -1;">
           <label class="setting-label">🎓 Qualifica / Titolo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(appare nella firma — facoltativo)</span></label>
-          <textarea id="doctorQualifica" class="setting-textarea" placeholder="Specialista in Ostetricia e Ginecologia&#10;Senior Consultant — UOC Ostetricia e Ginecologia" style="min-height:58px;"></textarea>
+          <textarea id="doctorQualifica" class="setting-textarea" placeholder="Specialista in Ostetricia e Ginecologia&#10;Senior Consultant — UOC Ostetricia e Ginecologia" style="min-height:58px;">Medico Chirurgo
+Specialista in Ostetricia e Ginecologia
+c.piscicelli@libero.it · 338 6607124</textarea>
         </div>
 
-        <!-- Campi aggiuntivi per Registro Operatorio -->
+        <!-- AI Disclaimer checkbox -->
+        <div class="setting-group" style="grid-column: 1 / -1;">
+          <div class="ai-disclaimer-row">
+            <input type="checkbox" id="aiDisclaimerCheck" style="width:15px;height:15px;cursor:pointer;accent-color:#2c5f8d;">
+            <label for="aiDisclaimerCheck">
+              Aggiungi nota AI in calce alla relazione <span style="color:#94a3b8;font-style:italic;">(«Relazione redatta con il supporto di intelligenza artificiale; riletta, verificata e sottoscritta dal medico firmatario»)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Campi Registro Operatorio -->
         <div id="surgicalFields" style="display:none; grid-column: 1 / -1;">
           <div style="border-top: 2px solid #e2e8f0; margin: 8px 0 16px; padding-top: 16px;">
             <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom: 14px;">
               <div style="font-size: 13px; font-weight: 600; color: #764ba2;">🔪 Parametri Intervento</div>
-              <!-- Toggle formato verbale -->
               <div style="display:flex; align-items:center; gap:0; border:2px solid #e2e8f0; border-radius:8px; overflow:hidden; font-size:12px; font-weight:600;">
-                <button type="button" id="surgFmtDetailed" onclick="setSurgicalFormat('detailed')"
-                  style="padding:5px 14px; border:none; cursor:pointer; background:#764ba2; color:white; transition:all 0.15s;">
-                  📋 Dettagliato
-                </button>
-                <button type="button" id="surgFmtBrief" onclick="setSurgicalFormat('brief')"
-                  style="padding:5px 14px; border:none; cursor:pointer; background:white; color:#94a3b8; transition:all 0.15s;">
-                  📝 Sintetico
-                </button>
+                <button type="button" id="surgFmtDetailed" onclick="setSurgicalFormat('detailed')" style="padding:5px 14px; border:none; cursor:pointer; background:#764ba2; color:white; transition:all 0.15s;">📋 Dettagliato</button>
+                <button type="button" id="surgFmtBrief" onclick="setSurgicalFormat('brief')" style="padding:5px 14px; border:none; cursor:pointer; background:white; color:#94a3b8; transition:all 0.15s;">📝 Sintetico</button>
               </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-
-              <!-- ACCESSO: chips multipli -->
+            <div style="display:flex; flex-direction:column; gap:16px;">
               <div class="setting-group">
                 <label class="setting-label">🚪 Via di accesso <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(seleziona uno o più)</span></label>
                 <div id="accessoChips" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
@@ -710,19 +747,14 @@
                   <button type="button" class="access-chip" data-accesso="ostetrico" onclick="toggleAccesso(this)">👶 Ostetrico</button>
                 </div>
               </div>
-
-              <!-- PATOLOGIE: checkbox multipli, filtrati dinamicamente -->
               <div class="setting-group" id="patologieGroup" style="display:none;">
                 <label class="setting-label">🔬 Patologia / Intervento <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(seleziona uno o più)</span></label>
                 <div id="patologieChips" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;"></div>
               </div>
-
-              <!-- PROBLEMATICHE -->
               <div class="setting-group">
-                <label class="setting-label">🔎 Reperti / caratteristiche della patologia <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(facoltativo — guida la tecnica)</span></label>
-                <input type="text" id="problematiche" class="setting-input" placeholder="es. cisti ovaio dx 8 cm superficie regolare mobile senza aderenze — polipo parete posteriore peduncolo sottile 1.5 cm — mioma G1 3 cm — aderenze periannessialo sx — Douglas parzialmente obliterato...">
+                <label class="setting-label">🔎 Reperti / caratteristiche della patologia <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(facoltativo)</span></label>
+                <input type="text" id="problematiche" class="setting-input" placeholder="es. cisti ovaio dx 8 cm superficie regolare mobile senza aderenze...">
               </div>
-
             </div>
           </div>
         </div>
@@ -730,32 +762,118 @@
       </div>
     </div>
   </div>
-  
+
+  <!-- ═══ MAIN GRID ═══ -->
   <div class="main-grid">
     
     <div class="panel">
       <div class="panel-title" id="inputPanelTitle">📋 Dati Cartella Clinica</div>
-      <textarea id="inputData" class="input-area" placeholder="Incolla qui i dati della cartella dal tuo database...
+      
+      <!-- ── TEMPLATE RAPIDI ── -->
+      <div id="templateSection" style="margin-bottom:10px;">
+        <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:7px;">⚡ Template rapidi</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <button type="button" class="template-btn" onclick="loadTemplate('controllo')">🗓 Controllo annuale</button>
+          <button type="button" class="template-btn" onclick="loadTemplate('prima')">🆕 Prima visita gin.</button>
+          <button type="button" class="template-btn" onclick="loadTemplate('menopausa')">🌿 Menopausa</button>
+          <button type="button" class="template-btn" onclick="loadTemplate('followup')">🔍 Follow-up ecografico</button>
+          <button type="button" class="template-btn" onclick="loadTemplate('gravidanza')" style="border-color:#7c3aed;color:#7c3aed;">🤰 Gravidanza fisiologica</button>
+        </div>
+      </div>
 
-Per RELAZIONE OSTETRICA:
+      <!-- EG Badge + Counseling button (solo ostetrica/ginecologica) -->
+      <div class="eg-badge-container" id="egBadgeContainer" style="display:none;">
+        <div id="egBadge"></div>
+      </div>
+      <div id="counselingBtnContainer" style="display:none; margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn-counseling" onclick="openCounseling()">
+          🗣️ Counseling
+          <span class="c-badge" id="counselingBadge">0</span>
+        </button>
+        <button class="btn-regolo" onclick="openRegolo()">
+          📅 Regolo appuntamenti
+        </button>
+      </div>
+      
+      <textarea id="inputData" class="input-area" style="margin-top:12px;"
+        placeholder="Incolla qui i dati della cartella dal tuo database...
+
+Per RELAZIONE OSTETRICA (l'EG viene calcolata automaticamente se inserisci U.M.):
 Sig.ra: NOME COGNOME / Anni: 36 / Gravida: 1 / Para: 0 / U.M.: 11/06/2025 ...
 
 Per RELAZIONE GINECOLOGICA:
 Anni 30 / UM. 22/01/2026 / Motivo della visita: controllo ...
 
 Per REGISTRO OPERATORIO:
-Facoltativo — le chips accesso + patologia sono sufficienti per un verbale standard.
-Usa questo campo per dettagli tecnici specifici: strumentazione, tappe particolari, reperto istologico intraoperatorio..."></textarea>
+Facoltativo — le chips accesso + patologia sono sufficienti per un verbale standard."
+        oninput="onInputChange()" onpaste="setTimeout(parseInputBadges,50)"></textarea>
+
+      <!-- Parsing badges -->
+      <div class="parse-badges" id="parseBadges"></div>
+
+      <!-- Prescrizioni rapide -->
+      <div class="rx-section" id="rxSection" style="display:none;">
+        <div class="rx-header" onclick="toggleRxBody()">
+          <div class="rx-header-left">
+            💊 Prescrizioni rapide
+            <span class="rx-count" id="rxCount">0</span>
+          </div>
+          <span id="rxArrow" style="font-size:12px;color:#64748b;">▼</span>
+        </div>
+        <div class="rx-body" id="rxBody">
+          <div class="rx-cat-title">🖼 Diagnostica per immagini</div>
+          <div class="rx-chips-row">
+            <button type="button" class="rx-chip" data-rx="Mammografia bilaterale" onclick="toggleRxChip(this)">Mammografia bilaterale</button>
+            <button type="button" class="rx-chip" data-rx="Ecografia mammaria bilaterale" onclick="toggleRxChip(this)">Eco mammaria</button>
+            <button type="button" class="rx-chip" data-rx="Ecografia pelvica transvaginale" onclick="toggleRxChip(this)">Eco TV</button>
+            <button type="button" class="rx-chip" data-rx="RMN pelvi con mdc" onclick="toggleRxChip(this)">RMN pelvi</button>
+            <button type="button" class="rx-chip" data-rx="TC pelvi con mdc" onclick="toggleRxChip(this)">TC pelvi</button>
+            <button type="button" class="rx-chip" data-rx="Ecografia addome completo" onclick="toggleRxChip(this)">Eco addome</button>
+          </div>
+          <div class="rx-cat-title">🔭 Procedure e prelievi</div>
+          <div class="rx-chips-row">
+            <button type="button" class="rx-chip" data-rx="PAP test" onclick="toggleRxChip(this)">PAP test</button>
+            <button type="button" class="rx-chip" data-rx="HPV test HR" onclick="toggleRxChip(this)">HPV test HR</button>
+            <button type="button" class="rx-chip" data-rx="Colposcopia" onclick="toggleRxChip(this)">Colposcopia</button>
+            <button type="button" class="rx-chip" data-rx="Isteroscopia diagnostica" onclick="toggleRxChip(this)">Isteroscopia diagnostica</button>
+            <button type="button" class="rx-chip" data-rx="Tampone vaginale con antibiogramma" onclick="toggleRxChip(this)">Tampone vaginale</button>
+            <button type="button" class="rx-chip" data-rx="Biopsia endometriale" onclick="toggleRxChip(this)">Biopsia endometriale</button>
+          </div>
+          <div class="rx-cat-title">🧪 Esami ematochimici</div>
+          <div class="rx-chips-row">
+            <button type="button" class="rx-chip" data-rx="FSH, LH, Estradiolo" onclick="toggleRxChip(this)">FSH/LH/E2</button>
+            <button type="button" class="rx-chip" data-rx="Profilo tiroideo (TSH, FT3, FT4)" onclick="toggleRxChip(this)">Tiroide</button>
+            <button type="button" class="rx-chip" data-rx="Emocromo con formula" onclick="toggleRxChip(this)">Emocromo</button>
+            <button type="button" class="rx-chip" data-rx="Coagulazione (PT, PTT, fibrinogeno)" onclick="toggleRxChip(this)">Coagulazione</button>
+            <button type="button" class="rx-chip" data-rx="Testosterone totale e libero, DHEAS, 17OH-progesterone" onclick="toggleRxChip(this)">Profilo androgenico</button>
+            <button type="button" class="rx-chip" data-rx="CA125, HE4, ROMA index" onclick="toggleRxChip(this)">CA125/HE4</button>
+            <button type="button" class="rx-chip" data-rx="Densitometria ossea (MOC-DXA)" onclick="toggleRxChip(this)">MOC-DXA</button>
+          </div>
+          <div class="rx-cat-title">📅 Follow-up</div>
+          <div class="rx-chips-row">
+            <button type="button" class="rx-chip" data-rx="Controllo ginecologico dopo 3 mesi" onclick="toggleRxChip(this)">Controllo 3 mesi</button>
+            <button type="button" class="rx-chip" data-rx="Controllo ginecologico dopo 6 mesi" onclick="toggleRxChip(this)">Controllo 6 mesi</button>
+            <button type="button" class="rx-chip" data-rx="Controllo ginecologico annuale" onclick="toggleRxChip(this)">Controllo annuale</button>
+            <button type="button" class="rx-chip" data-rx="Visita senologica" onclick="toggleRxChip(this)">Visita senologica</button>
+            <button type="button" class="rx-chip" data-rx="Consulenza oncologica ginecologica" onclick="toggleRxChip(this)">Oncologia gin.</button>
+          </div>
+          <div class="rx-selected-area" id="rxSelectedArea">
+            <div class="rx-selected-title">Selezionate — verranno incluse nel referto:</div>
+            <div class="rx-sel-chips" id="rxSelChips"></div>
+          </div>
+        </div>
+      </div>
+
       <button class="btn-primary" onclick="generateReport()" id="generateBtn">
         <span id="generateBtnLabel">✨ Genera Relazione con AI</span>
       </button>
       <div class="cost-estimate" id="costEstimate"></div>
       
       <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #e2e8f0;">
-        <div style="font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 12px;">🧪 Test rapido:</div>
+        <div style="font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 12px;">🧪 Esempi preimpostati:</div>
         <button class="btn-secondary" onclick="loadObstetricExample()">Esempio Ostetrico</button>
         <button class="btn-secondary" onclick="loadGynecologicExample()">Esempio Ginecologico</button>
-        <button class="btn-secondary" onclick="loadSurgicalExample()" style="background: #f3e8ff; color: #764ba2; border-color: #764ba2;">🔪 Esempio Chirurgico</button>
+        <button class="btn-secondary" onclick="loadSurgicalExample()" style="background:#f3e8ff; color:#764ba2; border-color:#764ba2;">🔪 Esempio Chirurgico</button>
       </div>
     </div>
     
@@ -763,10 +881,10 @@ Usa questo campo per dettagli tecnici specifici: strumentazione, tappe particola
       <div class="panel">
         <div class="panel-title">📄 Relazione Generata (Modificabile)</div>
         
-        <div class="output-actions" id="outputActions" style="display: none;">
+        <div class="output-actions" id="outputActions" style="display:none;">
           <button class="btn-secondary" onclick="copyHTML()">📋 Copia HTML</button>
           <button class="btn-secondary" onclick="copyText()">📝 Copia Testo</button>
-          <button class="btn-secondary" onclick="window.print()">🖨️ Stampa / PDF</button>
+          <button class="btn-secondary" onclick="stampaCombinata()">🖨️ Stampa / PDF</button>
           <button class="btn-secondary" onclick="clearAll()">🔄 Nuova</button>
         </div>
         
@@ -774,18 +892,189 @@ Usa questo campo per dettagli tecnici specifici: strumentazione, tappe particola
           <div class="empty-state">
             <div class="empty-state-icon">🤖</div>
             <div><strong>Pronto all'uso!</strong> Incolla i dati e genera la relazione</div>
-            <div style="margin-top: 12px; font-size: 13px;">Scegli tra formato <strong>Completo</strong> o <strong>Sintetico</strong></div>
+            <div style="margin-top:12px; font-size:13px;">Scegli tra formato <strong>Completo</strong> o <strong>Sintetico</strong> · EG calcolata automaticamente dalla U.M.</div>
           </div>
         </div>
         
         <div class="loader" id="loader">
           <div class="spinner"></div>
           <div>Claude sta generando la relazione...</div>
-          <div style="font-size: 12px; color: #94a3b8; margin-top: 8px;">Circa 5-15 secondi</div>
+          <div style="font-size:12px; color:#94a3b8; margin-top:8px;">Circa 5-15 secondi</div>
         </div>
       </div>
     </div>
     
+  </div>
+</div>
+
+<!-- ═══ MODAL COUNSELING ═══ -->
+<div id="counselingOverlay" onclick="closeCounselingOnOutside(event)">
+  <div class="cm-modal">
+    
+    <div class="cm-header">
+      <div>
+        <div class="cm-header-title">🗣️ Configura Counseling</div>
+        <div class="cm-header-sub">Seleziona pacchetti predefiniti o aggiungi argomenti personalizzati — verranno integrati narrativamente nella relazione</div>
+      </div>
+      <button onclick="closeCounseling()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer; line-height:1; padding:0 4px;">✕</button>
+    </div>
+
+    <div class="cm-body">
+      
+      <!-- ── SINISTRA: Pacchetti ── -->
+      <div class="cm-left">
+        <div class="cm-tabs">
+          <button class="cm-tab active" id="tab-obs" onclick="switchTab('obs')">🤰 Ostetricia</button>
+          <button class="cm-tab" id="tab-gyn" onclick="switchTab('gyn')">🌸 Ginecologia</button>
+        </div>
+
+        <!-- Pacchetti ostetricia -->
+        <div id="pkgs-obs" class="cm-pkg-grid"></div>
+        <!-- Pacchetti ginecologia -->
+        <div id="pkgs-gyn" class="cm-pkg-grid" style="display:none;"></div>
+      </div>
+      
+      <!-- ── DESTRA: Configuratore tema libero ── -->
+      <div class="cm-right">
+        <div class="cm-right-title">✏️ Aggiungi tema personalizzato</div>
+        
+        <div class="cm-field">
+          <label class="cm-label">Argomento / Tema</label>
+          <textarea class="cm-textarea" id="cm-topic" placeholder="es. La paziente vuole sapere se può viaggiare in aereo a 28 settimane per un congresso&#10;es. Il partner chiede informazioni sulla diagnosi prenatale&#10;es. Preoccupazione per la cicatrice da TC precedente"></textarea>
+        </div>
+        
+        <div class="cm-field">
+          <label class="cm-label">Tono</label>
+          <select class="cm-select" id="cm-tone" onchange="updateToneHint()">
+            <option value="rassicurante">🌿 Rassicurante</option>
+            <option value="informativo">📋 Informativo-neutro</option>
+            <option value="direttivo">⚡ Direttivo</option>
+            <option value="empatico">💙 Empatico</option>
+            <option value="urgente">⚠️ Urgente / Richiede attenzione</option>
+            <option value="linee-guida">📚 Basato su linee guida</option>
+          </select>
+          <div class="cm-tone-hint" id="cm-tone-hint">Riduce l'ansia, sottolinea la normalità e la sicurezza della situazione clinica.</div>
+        </div>
+        
+        <div class="cm-field">
+          <label class="cm-label">Modalità</label>
+          <select class="cm-select" id="cm-modality">
+            <option value="accenno">Breve accenno nel testo (2-3 righe)</option>
+            <option value="approfondito">Paragrafo approfondito</option>
+            <option value="followup">Con raccomandazione di follow-up / esame</option>
+            <option value="domande">Con invito a fare domande (approccio dialogico)</option>
+          </select>
+        </div>
+        
+        <div class="cm-field">
+          <label class="cm-label">Taglio speciale <span style="font-weight:400;text-transform:none;color:#94a3b8;">(facoltativo)</span></label>
+          <input class="cm-input" id="cm-angle" placeholder="es. paziente ansiosa · partner scettico sui vaccini · desidera parto naturale · ha già avuto esperienza negativa">
+        </div>
+        
+        <button class="btn-add-topic" onclick="addCustomTopic()">+ Aggiungi questo argomento</button>
+      </div>
+    </div>
+
+    <!-- Footer con riepilogo e apply -->
+    <div class="cm-footer">
+      <div class="cm-active-list">
+        <div class="cm-active-title">Argomenti attivi — <span id="cm-total-count">0</span></div>
+        <div class="cm-active-items" id="cm-active-items">
+          <span style="font-size:12px; color:#94a3b8; font-style:italic;">Nessun argomento selezionato</span>
+        </div>
+      </div>
+      <button class="btn-cm-clear" onclick="clearAllCounseling()">✕ Svuota tutto</button>
+      <button class="btn-cm-apply" onclick="applyCounseling()">✓ Applica e chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL REGOLO OSTETRICO (nuovo) ═══ -->
+<div id="regoloOverlay" onclick="closeRegoloOnOutside(event)">
+  <div class="regolo-modal">
+
+    <div class="regolo-header">
+      <div>
+        <div class="regolo-title">📅 Regolo Ostetrico</div>
+        <div class="regolo-subtitle" id="regoloSubtitle">Calendario settimana per settimana con appuntamenti</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:16px;">
+        <!-- Correzione EG da eco -->
+        <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.15); padding:6px 14px; border-radius:10px;">
+          <span style="font-size:12px; font-weight:600; white-space:nowrap;">Correzione eco I trim.:</span>
+          <input type="number" id="ecoCorrezione" value="0" min="-21" max="21"
+            style="width:52px; padding:4px 6px; border:none; border-radius:6px; font-size:13px; font-weight:700; text-align:center; font-family:inherit;"
+            onchange="onEcoCorrezioneChange()" title="Giorni: positivo se eco anticipa UM (DPP si avvicina), negativo se eco posticipa">
+          <span style="font-size:11px; opacity:0.8;">gg</span>
+          <span style="font-size:10px; opacity:0.65;" id="correzioneLabel"></span>
+        </div>
+        <button onclick="closeRegolo()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer; line-height:1; padding:0 4px;">✕</button>
+      </div>
+    </div>
+
+    <div class="regolo-body">
+
+      <!-- ── Sinistra: configuratore ── -->
+      <div class="regolo-config">
+        <div class="regolo-config-title">
+          <span>Appuntamenti</span>
+          <button onclick="resetApptDefaults()" style="font-size:11px; font-weight:600; padding:3px 10px; border:1px solid #e2e8f0; border-radius:6px; background:white; color:#64748b; cursor:pointer; font-family:inherit;">↺ Default</button>
+        </div>
+
+        <div class="appt-labels">
+          <span class="appt-label-text" style="text-align:left;">Appuntamento</span>
+          <span class="appt-label-text">Da</span>
+          <span class="appt-label-text">A</span>
+          <span class="appt-label-text"></span>
+        </div>
+
+        <div id="apptList"></div>
+
+        <!-- Aggiungi inline — no prompt() -->
+        <div id="addApptForm" style="margin-top:10px; padding:10px; background:#f0f9ff; border:2px dashed #7dd3fc; border-radius:8px; display:none;">
+          <div style="font-size:11px; font-weight:700; color:#0369a1; margin-bottom:8px;">Nuovo appuntamento</div>
+          <input id="newApptName" type="text" placeholder="Nome..." class="appt-week-input" style="width:100%; margin-bottom:6px; padding:6px 8px; text-align:left;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px;">
+            <input id="newApptMin" type="number" min="1" max="42" placeholder="Da sett." class="appt-week-input">
+            <input id="newApptMax" type="number" min="1" max="42" placeholder="A sett." class="appt-week-input">
+          </div>
+          <select id="newApptTag" class="appt-week-input" style="width:100%; margin-bottom:6px; padding:6px 8px; text-align:left;">
+            <option value="eco">🔵 Ecografia</option>
+            <option value="screen">🟢 Screening</option>
+            <option value="vac">🟣 Vaccinazione</option>
+            <option value="visita">⚪ Visita</option>
+            <option value="parto">🟡 Parto</option>
+          </select>
+          <div style="display:flex; gap:6px;">
+            <button onclick="confirmAddAppt()" style="flex:1; padding:6px; background:#0ea5e9; color:white; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;">+ Aggiungi</button>
+            <button onclick="document.getElementById('addApptForm').style.display='none'" style="padding:6px 10px; background:white; border:1px solid #e2e8f0; border-radius:6px; font-size:12px; cursor:pointer; font-family:inherit;">✕</button>
+          </div>
+        </div>
+
+        <button class="btn-add-appt" onclick="document.getElementById('addApptForm').style.display='block'; document.getElementById('newApptName').focus();">+ Aggiungi appuntamento</button>
+      </div>
+
+      <!-- ── Destra: tabella settimana per settimana ── -->
+      <div class="regolo-preview">
+        <div class="regolo-preview-title">
+          <span id="regoloPreviewLabel">📋 Calendario</span>
+          <span id="regoloEGlabel" style="font-size:11px; font-weight:400; color:#64748b;"></span>
+        </div>
+        <div id="regoloPreviewContent" style="overflow-x:auto;"></div>
+      </div>
+
+    </div>
+
+    <div class="regolo-footer">
+      <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#1e293b; cursor:pointer;">
+        <input type="checkbox" id="includiRegoloCheck" style="width:16px; height:16px; cursor:pointer;">
+        Includi nel report (stampa)
+      </label>
+      <span style="flex:1;"></span>
+      <button onclick="printRegoloNew()" style="padding:9px 20px; background:white; border:2px solid #2c5f8d; border-radius:8px; color:#2c5f8d; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;">🖨️ Stampa per la paziente</button>
+      <button onclick="closeRegolo()" style="padding:9px 22px; background:linear-gradient(135deg,#1b2d4f,#2c5f8d); border:none; border-radius:8px; color:white; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;">✓ Chiudi</button>
+    </div>
+
   </div>
 </div>
 
@@ -795,15 +1084,10 @@ Usa questo campo per dettagli tecnici specifici: strumentazione, tappe particola
     <button onclick="closeFeedback()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#94a3b8; line-height:1;">✕</button>
     <div style="font-size:20px; font-weight:700; color:#1e293b; margin-bottom:6px;">💬 Invia un feedback</div>
     <div style="font-size:13px; color:#64748b; margin-bottom:22px;">Suggerimenti, segnalazioni o richieste di nuove funzioni — ogni feedback è benvenuto.</div>
-
-    <!-- ═══════════════════════════════════════════════
-         FORMSPREE — sostituisci YOUR_FORM_ID con
-         l'ID ottenuto da formspree.io/forms
-         ═══════════════════════════════════════════════ -->
     <form id="feedbackForm" action="https://formspree.io/f/mreypkgl" method="POST" onsubmit="submitFeedback(event)">
       <div style="margin-bottom:14px;">
         <label style="font-size:12px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Tipo</label>
-        <select name="tipo" style="width:100%; padding:9px 12px; border:2px solid #e2e8f0; border-radius:6px; font-size:14px; font-family:inherit; outline:none;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+        <select name="tipo" style="width:100%; padding:9px 12px; border:2px solid #e2e8f0; border-radius:6px; font-size:14px; font-family:inherit; outline:none;">
           <option value="suggerimento">💡 Suggerimento / Nuova funzione</option>
           <option value="bug">🐛 Segnalazione errore</option>
           <option value="miglioramento">✏️ Proposta di miglioramento</option>
@@ -812,14 +1096,14 @@ Usa questo campo per dettagli tecnici specifici: strumentazione, tappe particola
       </div>
       <div style="margin-bottom:14px;">
         <label style="font-size:12px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Messaggio</label>
-        <textarea name="messaggio" required rows="4" placeholder="Descrivi il tuo suggerimento o il problema riscontrato..." style="width:100%; padding:10px 12px; border:2px solid #e2e8f0; border-radius:6px; font-size:14px; font-family:inherit; resize:vertical; outline:none;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+        <textarea name="messaggio" required rows="4" placeholder="Descrivi il tuo suggerimento o il problema riscontrato..." style="width:100%; padding:10px 12px; border:2px solid #e2e8f0; border-radius:6px; font-size:14px; font-family:inherit; resize:vertical; outline:none;"></textarea>
       </div>
       <div style="margin-bottom:20px;">
-        <label style="font-size:12px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Email (facoltativa — per ricevere risposta)</label>
-        <input type="email" name="email" placeholder="nome@esempio.it" style="width:100%; padding:9px 12px; border:2px solid #e2e8f0; border-radius:6px; font-size:14px; font-family:inherit; outline:none;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+        <label style="font-size:12px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Email (facoltativa)</label>
+        <input type="email" name="email" placeholder="nome@esempio.it" style="width:100%; padding:9px 12px; border:2px solid #e2e8f0; border-radius:6px; font-size:14px; font-family:inherit; outline:none;">
       </div>
-      <input type="hidden" name="_subject" value="Feedback — Generatore Relazioni Cliniche AI">
-      <input type="hidden" name="versione" value="v3f">
+      <input type="hidden" name="_subject" value="Feedback — Generatore Relazioni Cliniche AI v4">
+      <input type="hidden" name="versione" value="v4">
       <div style="display:flex; gap:10px; justify-content:flex-end;">
         <button type="button" onclick="closeFeedback()" style="padding:10px 20px; background:white; border:2px solid #e2e8f0; border-radius:6px; font-size:14px; font-weight:600; color:#64748b; cursor:pointer;">Annulla</button>
         <button type="submit" id="feedbackSubmitBtn" style="padding:10px 24px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer;">Invia →</button>
@@ -828,7 +1112,6 @@ Usa questo campo per dettagli tecnici specifici: strumentazione, tappe particola
     <div id="feedbackSuccess" style="display:none; text-align:center; padding:20px 0;">
       <div style="font-size:40px; margin-bottom:12px;">✅</div>
       <div style="font-size:16px; font-weight:600; color:#065f46; margin-bottom:6px;">Grazie per il feedback!</div>
-      <div style="font-size:13px; color:#64748b;">Il messaggio è stato inviato al Dott. Piscicelli.</div>
     </div>
   </div>
 </div>
@@ -836,12 +1119,890 @@ Usa questo campo per dettagli tecnici specifici: strumentazione, tappe particola
 <div class="toast" id="toast"></div>
 
 <script>
-// API endpoint - Vercel Function
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
 const API_URL = '/api/generate';
-
-// Formato verbale operatorio: 'detailed' | 'brief'
 let surgicalFormat = 'detailed';
 
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// COUNSELING — PACCHETTI
+// ═══════════════════════════════════════════════════════════════
+const PACKAGES = {
+  obs: [
+    { id:'t1', icon:'🟣', name:'I Trimestre standard', topics:[
+      'Screening del I trimestre (NT + Bitest)',
+      'NIPT (test prenatale non invasivo)',
+      'Toxoplasmosi: profilassi alimentare',
+      'CMV: prevenzione comportamentale',
+      'Supplementazione con acido folico e iodio',
+      'Vitamina D in gravidanza',
+      'Screening sierologico di base (HIV, epatiti, sifilide)',
+      'Tiroide in gravidanza: monitoraggio TSH',
+      'Nausea e vomito del I trimestre',
+    ]},
+    { id:'t2', icon:'🔵', name:'II Trimestre standard', topics:[
+      'Ecografia morfologica (18-22 sett): importanza e cosa valuta',
+      'OGTT: screening diabete gestazionale (24-28 sett)',
+      'Vaccinazione Dtpa (28-32 sett): protezione neonatale',
+      'Vaccinazione antinfluenzale in gravidanza',
+      'Ferro e anemia: integrazione e monitoraggio',
+      'Prevenzione tromboembolismo venoso',
+    ]},
+    { id:'t3', icon:'🟢', name:'III Trimestre standard', topics:[
+      'Tampone GBS — Streptococco di Gruppo B (35-37 sett)',
+      'Parto pretermine: segnali di allarme',
+      'Monitoraggio movimenti fetali: quando preoccuparsi',
+      'Programmazione del parto a termine',
+      'Gravidanza oltre il termine: sorveglianza',
+      'Vaccinazione RSV in gravidanza',
+    ]},
+    { id:'dm', icon:'🍬', name:'Diabete gestazionale', topics:[
+      'Diabete gestazionale: diagnosi e significato clinico',
+      'Automonitoraggio glicemico: tecnica e obiettivi glicemici',
+      'Dieta per diabete gestazionale: principi pratici',
+      'Attività fisica nel diabete gestazionale',
+      'Insulina in gravidanza: quando è necessaria',
+      'Rischi fetali del diabete gestazionale non controllato',
+      'Ecografia di sorveglianza della crescita fetale (macrosomia)',
+      'Follow-up post-partum: rischio di diabete T2',
+    ]},
+    { id:'ipert', icon:'🩸', name:'Ipertensione / Preeclampsia', topics:[
+      'Ipertensione gestazionale: definizione e monitoraggio domiciliare',
+      'Preeclampsia: sintomi di allarme (cefalea, epigastralgia, fosfeni)',
+      'Profilassi con aspirina a basse dosi: indicazioni e tempistica',
+      'Quando recarsi in PS: criteri di urgenza',
+      'Restrizione di attività e riposo: raccomandazioni pratiche',
+      'Parto prematuro programmato nella preeclampsia grave',
+    ]},
+    { id:'fgr', icon:'📏', name:'Accrescimento fetale ridotto (FGR)', topics:[
+      'FGR: definizione, cause più frequenti, prognosi',
+      'Sorveglianza ecografica intensificata (crescita, doppler, LA)',
+      'Cardiotocografia (NST): come interpretarla a domicilio',
+      'Riposo e nutrizione nel FGR',
+      'Tempistica e modalità del parto nel FGR',
+      'Monitoraggio movimenti fetali: diario dei movimenti',
+    ]},
+    { id:'ecv', icon:'🔄', name:'Presentazione podalica / ECV', topics:[
+      'Presentazione podalica: frequenza e possibilità di rivolgimento spontaneo',
+      'Versione cefalica esterna (ECV): procedura, rischi, tasso di successo',
+      'Taglio cesareo programmato per presentazione podalica: quando e come',
+      'Parto podalico vaginale: indicazioni molto selettive',
+    ]},
+    { id:'vbac', icon:'✂️', name:'Gravidanza dopo TC (VBAC)', topics:[
+      'VBAC: definizione e candidatura ideale',
+      'Rischio di deiscenza/rottura uterina: stima e sorveglianza',
+      'Travaglio con cicatrice da TC: cosa cambia nella gestione',
+      'Nuovo taglio cesareo programmato: indicazioni e tempistica',
+    ]},
+    { id:'gem', icon:'👥', name:'Gravidanza gemellare', topics:[
+      'Corionicità e amnionicità: importanza della determinazione ecografica precoce',
+      'Sorveglianza ecografica intensificata nelle gravidanze gemellari',
+      'Sindrome trasfusore-trasfuso (TTTS) nei gemelli MC: segnali',
+      'Rischio di parto pretermine nelle gravidanze gemellari',
+      'Modalità del parto: indicazioni al TC nelle gravidanze gemellari',
+    ]},
+    { id:'tev', icon:'💉', name:'Trombofilia / TEV', topics:[
+      'Tromboembolismo venoso in gravidanza: rischio aumentato',
+      'Eparina a basso peso molecolare (LMWH): tecnica di iniezione',
+      'Durata della profilassi anticoagulante: ante e post-partum',
+      'Calze elastiche a compressione graduata: utilizzo in gravidanza',
+      'Segnali di allarme per TVP e embolia polmonare',
+    ]},
+    { id:'rh', icon:'🧬', name:'Isoimmmunizzazione Rh', topics:[
+      'Gruppo sanguigno Rh negativo e incompatibilità Rh: spiegazione',
+      'Profilassi anti-D: quando e perché si somministra',
+      'Monitoraggio degli anticorpi anti-D in gravidanza',
+      'Rischi per il feto in caso di isoimmmunizzazione accertata',
+    ]},
+    { id:'lifestyle', icon:'🌿', name:'Stile di vita', topics:[
+      'Fumo in gravidanza: rischi e supporto alla cessazione',
+      'Alcool in gravidanza: non esiste una dose sicura',
+      'Attività fisica in gravidanza: raccomandazioni pratiche',
+      'Nutrizione e dieta equilibrata in gravidanza',
+      'Viaggi in aereo e in auto: quando e come',
+      'Lavoro e gravidanza: attività a rischio e tutele',
+      'Farmaci e automedicazione: cosa evitare assolutamente',
+      'Salute orale in gravidanza: igiene e controlli',
+    ]},
+    { id:'parto', icon:'👶', name:'Parto & Post-parto', topics:[
+      'Piano del parto: preferenze, aspettative e limiti clinici',
+      'Analgesia in travaglio (epidurale): modalità e timing',
+      'Parto vaginale vs taglio cesareo: elementi per la decisione',
+      'Allattamento al seno: preparazione, benefici, gestione problemi',
+      'Depressione perinatale: riconoscimento e supporto precoce',
+      'Contraccezione nel post-partum: quale metodo e quando',
+      'Recupero post-partum: ripresa attività, fisioterapia pavimento pelvico',
+    ]},
+  ],
+  gyn: [
+    { id:'contrac', icon:'💊', name:'Contraccezione', topics:[
+      'Metodi contraccettivi reversibili: panoramica comparativa',
+      'Pillola contraccettiva: indicazioni, controindicazioni, gestione dimenticanza',
+      'IUD al rame vs IUS al levonorgestrel: differenze e scelta',
+      'Contraccezione di emergenza: quando e come usarla',
+      'Contraccezione nell\'allattamento: metodi sicuri',
+      'Contraccezione dopo i 40 anni: quale metodo scegliere',
+    ]},
+    { id:'endo', icon:'🌸', name:'Endometriosi', topics:[
+      'Endometriosi: fisiopatologia, sintomi, impatto sulla fertilità',
+      'Diagnosi di endometriosi: ruolo dell\'ecografia e della RM',
+      'Trattamento medico dell\'endometriosi: opzioni ormonali',
+      'Chirurgia dell\'endometriosi: indicazioni e rischi',
+      'Endometriosi e fertilità: preservazione della fertilità',
+      'Qualità di vita con endometriosi: strategie di gestione del dolore',
+    ]},
+    { id:'meno', icon:'🌡️', name:'Menopausa', topics:[
+      'Menopausa: definizione, età di insorgenza, sintomi vasomotori',
+      'Terapia ormonale sostitutiva (TOS): benefici, rischi, candidatura',
+      'Atrofia urogenitale: trattamenti locali e sistemici',
+      'Osteoporosi in menopausa: screening DXA e profilassi',
+      'Salute cardiovascolare in menopausa',
+      'Alternative alla TOS per i sintomi menopausali',
+      'Menopausa precoce (POI): gestione e implicazioni',
+    ]},
+    { id:'onco', icon:'🔬', name:'Oncoprofilassi (PAP/HPV)', topics:[
+      'PAP test: quando iniziare, frequenza, come interpretare il referto',
+      'Vaccino HPV: indicazioni, schedule, protezione crociata',
+      'HPV ad alto rischio: gestione della positività',
+      'CIN e conizzazione: significato e follow-up',
+      'Autoesame del seno: tecnica e limiti',
+      'Mammografia: quando iniziare e con quale frequenza',
+    ]},
+    { id:'ist', icon:'🦠', name:'IST / MST', topics:[
+      'Infezioni sessualmente trasmesse: panoramica e prevenzione',
+      'Chlamydia: screening, trattamento, notifica al partner',
+      'HPV: contagiosità, storia naturale, prevenzione',
+      'Herpes genitale: gestione delle recidive, contagiosità',
+      'Gonorrea e sifilide: diagnosi e trattamento',
+      'Preservativo: efficacia e uso corretto',
+    ]},
+    { id:'infert', icon:'👶', name:'Infertilità di coppia', topics:[
+      'Definizione di infertilità e iter diagnostico di coppia',
+      'Monitoraggio dell\'ovulazione: metodi pratici',
+      'Seme: cosa valuta lo spermiogramma',
+      'Riserva ovarica: AMH e conta dei follicoli antrali',
+      'PMA (procreazione medicalmente assistita): panoramica delle tecniche',
+      'Preservazione della fertilità: ovociti e embrioni',
+      'Impatto psicologico dell\'infertilità: supporto e risorse',
+    ]},
+    { id:'miomi', icon:'🫧', name:'Fibromi / Miomi uterini', topics:[
+      'Miomi uterini: classificazione FIGO, sintomi, impatto sulla fertilità',
+      'Monitoraggio ecografico dei miomi: quando preoccuparsi',
+      'Trattamento medico dei miomi (ulipristal, GnRH analoghi)',
+      'Miomectomia vs isterectomia: indicazioni e scelta',
+      'Tecniche mini-invasive (isteroscopia, laparoscopia): criteri',
+      'Miomi in gravidanza: sorveglianza e rischi',
+    ]},
+    { id:'osteo', icon:'🦴', name:'Osteoporosi / Densitometria', topics:[
+      'Densitometria ossea (MOC): quando farla e come leggere i risultati',
+      'T-score e Z-score: interpretazione clinica',
+      'Calcio e vitamina D: fabbisogno e integrazione',
+      'Bifosfonati: meccanismo, indicazioni, durata trattamento',
+      'Teriparatide e denosumab: trattamenti per osteoporosi severa',
+      'Prevenzione delle cadute: strategie pratiche',
+      'FRAX: calcolo del rischio di frattura a 10 anni',
+    ]},
+    { id:'pcos', icon:'⚙️', name:'Sindrome dell\'ovaio policistico (PCOS)', topics:[
+      'PCOS: criteri diagnostici di Rotterdam, prevalenza',
+      'Insulino-resistenza nella PCOS: screening e trattamento',
+      'Ciclo irregolare e anovulazione: opzioni terapeutiche',
+      'Iperandrogenismo: trattamento dell\'irsutismo e dell\'acne',
+      'PCOS e fertilità: induzione dell\'ovulazione',
+      'Rischio metabolico a lungo termine nella PCOS: sorveglianza',
+    ]},
+  ]
+};
+
+// Toni — descrizioni per la UI
+const TONE_HINTS = {
+  'rassicurante': 'Riduce l\'ansia, sottolinea la normalità e la sicurezza della situazione clinica.',
+  'informativo':  'Dati oggettivi, stile divulgativo neutro — utile quando la paziente chiede fatti.',
+  'direttivo':    'Istruzioni precise e chiare su cosa fare e cosa evitare. Adatto a compliance terapeutica.',
+  'empatico':     'Riconosce le preoccupazioni della paziente, approccio centrato sull\'emozione.',
+  'urgente':      'Sottolinea l\'importanza clinica del tema e invita all\'azione immediata o alla sorveglianza.',
+  'linee-guida':  'Fa riferimento esplicito alle raccomandazioni delle linee guida nazionali/internazionali.',
+};
+
+// Stato counseling
+let activePackages = new Set();      // id pacchetti selezionati
+let customTopics = [];               // [{topic, tone, modality, angle}]
+let currentTab = 'obs';
+
+// ── BUILD UI PACCHETTI ──────────────────────────────────────────
+function buildPackageUI() {
+  ['obs','gyn'].forEach(cat => {
+    const container = document.getElementById(`pkgs-${cat}`);
+    PACKAGES[cat].forEach(pkg => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'cm-pkg-card';
+      card.id = `pkg-${pkg.id}`;
+      card.dataset.pkgId = pkg.id;
+      card.innerHTML = `
+        <span class="cm-pkg-check">✓</span>
+        <div class="cm-pkg-icon">${pkg.icon}</div>
+        <div class="cm-pkg-name">${pkg.name}</div>
+        <div class="cm-pkg-count">${pkg.topics.length} argomenti</div>
+      `;
+      card.onclick = () => togglePackage(pkg.id);
+      container.appendChild(card);
+    });
+  });
+}
+
+function togglePackage(id) {
+  if (activePackages.has(id)) activePackages.delete(id);
+  else activePackages.add(id);
+  document.getElementById(`pkg-${id}`)?.classList.toggle('active', activePackages.has(id));
+  renderActiveItems();
+}
+
+// ── TAB ──────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('pkgs-obs').style.display = tab === 'obs' ? 'grid' : 'none';
+  document.getElementById('pkgs-gyn').style.display = tab === 'gyn' ? 'grid' : 'none';
+  document.getElementById('tab-obs').classList.toggle('active', tab === 'obs');
+  document.getElementById('tab-gyn').classList.toggle('active', tab === 'gyn');
+}
+
+// ── TONO HINT ────────────────────────────────────────────────────
+function updateToneHint() {
+  const v = document.getElementById('cm-tone').value;
+  document.getElementById('cm-tone-hint').textContent = TONE_HINTS[v] || '';
+}
+
+// ── AGGIUNGI TEMA LIBERO ─────────────────────────────────────────
+function addCustomTopic() {
+  const topic = document.getElementById('cm-topic').value.trim();
+  if (!topic) { alert('Inserisci un argomento'); return; }
+  const tone     = document.getElementById('cm-tone').value;
+  const modality = document.getElementById('cm-modality').value;
+  const angle    = document.getElementById('cm-angle').value.trim();
+  customTopics.push({ topic, tone, modality, angle });
+  document.getElementById('cm-topic').value    = '';
+  document.getElementById('cm-angle').value    = '';
+  document.getElementById('cm-tone').value     = 'rassicurante';
+  document.getElementById('cm-modality').value = 'accenno';
+  updateToneHint();
+  renderActiveItems();
+}
+
+// ── RENDER RIEPILOGO ─────────────────────────────────────────────
+function renderActiveItems() {
+  const container = document.getElementById('cm-active-items');
+  const countEl   = document.getElementById('cm-total-count');
+  container.innerHTML = '';
+  let total = 0;
+
+  activePackages.forEach(id => {
+    const pkg = findPkg(id);
+    if (!pkg) return;
+    total += pkg.topics.length;
+    const chip = document.createElement('span');
+    chip.className = 'cm-active-chip';
+    chip.innerHTML = `${pkg.icon} ${pkg.name} <span class="rm" onclick="togglePackage('${id}')">✕</span>`;
+    container.appendChild(chip);
+  });
+
+  customTopics.forEach((ct, idx) => {
+    total++;
+    const chip = document.createElement('span');
+    chip.className = 'cm-active-chip custom-chip';
+    const label = ct.topic.length > 35 ? ct.topic.substring(0,35) + '…' : ct.topic;
+    chip.innerHTML = `✏️ ${label} <span class="rm" onclick="removeCustomTopic(${idx})">✕</span>`;
+    container.appendChild(chip);
+  });
+
+  if (total === 0) {
+    container.innerHTML = '<span style="font-size:12px; color:#94a3b8; font-style:italic;">Nessun argomento selezionato</span>';
+  }
+
+  countEl.textContent = total > 0 ? `${total} argomento` + (total > 1 ? 'i' : '') : '0';
+  updateMainBadge(activePackages.size + customTopics.length);
+}
+
+function removeCustomTopic(idx) {
+  customTopics.splice(idx, 1);
+  renderActiveItems();
+}
+
+function findPkg(id) {
+  for (const cat of ['obs','gyn']) {
+    const p = PACKAGES[cat].find(p => p.id === id);
+    if (p) return p;
+  }
+  return null;
+}
+
+// ── BADGE MAIN ────────────────────────────────────────────────────
+function updateMainBadge(count) {
+  const badge = document.getElementById('counselingBadge');
+  if (count > 0) { badge.textContent = count; badge.classList.add('visible'); }
+  else badge.classList.remove('visible');
+}
+
+// ── GET COUNSELING PAYLOAD ────────────────────────────────────────
+function getCounselingPayload() {
+  // Topics da pacchetti
+  const pkgTopics = [];
+  activePackages.forEach(id => {
+    const pkg = findPkg(id);
+    if (pkg) pkgTopics.push(...pkg.topics);
+  });
+  return { pkgTopics, customTopics };
+}
+
+// ── OPEN / CLOSE ─────────────────────────────────────────────────
+function openCounseling() {
+  document.getElementById('counselingOverlay').style.display = 'flex';
+}
+function closeCounseling() {
+  document.getElementById('counselingOverlay').style.display = 'none';
+}
+function closeCounselingOnOutside(e) {
+  if (e.target === document.getElementById('counselingOverlay')) closeCounseling();
+}
+function applyCounseling() {
+  closeCounseling();
+  const total = activePackages.size + customTopics.length;
+  if (total > 0) showToast(`✅ Counseling configurato: ${total} voce` + (total > 1 ? 'i' : ''));
+}
+function clearAllCounseling() {
+  activePackages.clear();
+  customTopics = [];
+  document.querySelectorAll('.cm-pkg-card.active').forEach(c => c.classList.remove('active'));
+  renderActiveItems();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REGOLO OSTETRICO — DATI APPUNTAMENTI
+// ═══════════════════════════════════════════════════════════════
+const APPT_DEFAULTS = [
+  { id:'eco1',   name:'Prima ecografia (viabilità)',   min:6,  max:10, tag:'eco',    on:true },
+  { id:'nt',     name:'NT + Bitest',                   min:11, max:13, tag:'screen', on:true },
+  { id:'nipt',   name:'NIPT',                          min:10, max:14, tag:'screen', on:false },
+  { id:'villo',  name:'Villocentesi',                  min:11, max:13, tag:'screen', on:false },
+  { id:'amnio',  name:'Amniocentesi',                  min:15, max:17, tag:'screen', on:false },
+  { id:'morfo',  name:'Ecografia morfologica',         min:18, max:22, tag:'eco',    on:true },
+  { id:'ogtt',   name:'OGTT (curva glicemica)',         min:24, max:28, tag:'screen', on:true },
+  { id:'dtpa',   name:'Vaccinazione Dtpa',             min:28, max:32, tag:'vac',    on:true },
+  { id:'rsv',    name:'Vaccinazione RSV',               min:32, max:36, tag:'vac',    on:false },
+  { id:'eco30',  name:'Ecografia accrescimento (I)',    min:28, max:32, tag:'eco',    on:true },
+  { id:'eco34',  name:'Ecografia accrescimento (II)',   min:32, max:36, tag:'eco',    on:true },
+  { id:'gbs',    name:'Tampone GBS',                   min:35, max:37, tag:'screen', on:true },
+  { id:'ecopre', name:'Ecografia pre-parto',           min:36, max:38, tag:'eco',    on:false },
+  { id:'dpp',    name:'Data Presunta del Parto (DPP)', min:40, max:40, tag:'parto',  on:true },
+];
+
+// Fondus (cm) e peso fetale mediano (g) per settimana — INTERGROWTH-21st
+const REGOLO_DATA = {
+  6:[null,2],7:[null,5],8:[null,8],9:[null,14],10:[null,22],
+  11:[null,28],12:[null,35],13:[null,47],14:[11,70],15:[13,110],
+  16:[15,145],17:[17,195],18:[18,245],19:[20,295],20:[22,360],
+  21:[23,430],22:[24,500],23:[25,590],24:[26,670],25:[27,770],
+  26:[28,875],27:[29,1000],28:[30,1130],29:[31,1280],30:[32,1445],
+  31:[34,1610],32:[35,1790],33:[36,1980],34:[37,2175],35:[38,2395],
+  36:[39,2620],37:[40,2875],38:[41,3100],39:[42,3315],40:[43,3450],
+  41:[null,3590],42:[null,3700]
+};
+
+const ROMAN = ['','I','II','III','IV','V','VI','VII','VIII','IX','X'];
+function meseLunare(sett) {
+  if (sett < 1) return '';
+  return ROMAN[Math.min(Math.ceil(sett / 4), 10)] || '';
+}
+
+let apptList = [];
+let apptNextId = 100;
+let ecoCorrezioneGiorni = 0; // correzione ± giorni
+
+function getEffectiveUM() {
+  if (!currentEG || !currentEG.um) return null;
+  const d = new Date(currentEG.um);
+  d.setDate(d.getDate() - ecoCorrezioneGiorni); // anticipo eco → UM si sposta indietro → DPP si avvicina
+  return d;
+}
+
+function getEffectiveDPP() {
+  const um = getEffectiveUM();
+  if (!um) return null;
+  const d = new Date(um);
+  d.setDate(d.getDate() + 280);
+  return d;
+}
+
+function onEcoCorrezioneChange() {
+  ecoCorrezioneGiorni = parseInt(document.getElementById('ecoCorrezione').value) || 0;
+  const label = document.getElementById('correzioneLabel');
+  if (ecoCorrezioneGiorni !== 0) {
+    const effDPP = getEffectiveDPP();
+    label.textContent = effDPP ? `→ DPP: ${formatDate(effDPP)}` : '';
+  } else {
+    label.textContent = '';
+  }
+  updateRegoloSubtitle();
+  renderRegoloPreview();
+}
+
+function updateRegoloSubtitle() {
+  const sub = document.getElementById('regoloSubtitle');
+  const egLabel = document.getElementById('regoloEGlabel');
+  const effUM = getEffectiveUM();
+  const effDPP = getEffectiveDPP();
+  if (effUM) {
+    const corrTxt = ecoCorrezioneGiorni !== 0 ? ` · Correzione eco: ${ecoCorrezioneGiorni > 0 ? '+' : ''}${ecoCorrezioneGiorni}gg` : '';
+    sub.textContent = `U.M. ${formatDate(effUM)}${corrTxt} · D.P.P. ${formatDate(effDPP)} · EG: ${currentEG ? currentEG.label : ''}`;
+    egLabel.textContent = `EG oggi: ${currentEG ? currentEG.label : '—'}`;
+  } else {
+    sub.textContent = 'Inserisci la U.M. nei dati per le date esatte';
+    egLabel.textContent = '';
+  }
+}
+
+function resetApptDefaults() {
+  apptList = APPT_DEFAULTS.map(a => ({ ...a }));
+  renderApptList();
+  renderRegoloPreview();
+}
+
+// ── LISTA APPUNTAMENTI ───────────────────────────────────────────
+function renderApptList() {
+  const container = document.getElementById('apptList');
+  container.innerHTML = '';
+  apptList.forEach(appt => {
+    const row = document.createElement('div');
+    row.className = 'appt-row' + (appt.on ? '' : ' disabled');
+    row.id = `appt-row-${appt.id}`;
+    row.innerHTML = `
+      <div class="appt-name">${appt.name}${appt.custom ? ' <span style="font-size:10px;color:#94a3b8;">pers.</span>' : ''}</div>
+      <input class="appt-week-input" type="number" min="1" max="42" value="${appt.min}"
+        onchange="updateAppt('${appt.id}','min',this.value)">
+      <input class="appt-week-input" type="number" min="1" max="42" value="${appt.max}"
+        onchange="updateAppt('${appt.id}','max',this.value)">
+      <button class="appt-toggle ${appt.on ? 'on' : 'off'}"
+        onclick="toggleAppt('${appt.id}')">
+        ${appt.on ? '✓' : '○'}
+      </button>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function updateAppt(id, field, value) {
+  const appt = apptList.find(a => a.id === id);
+  if (!appt) return;
+  const v = parseInt(value);
+  if (v >= 1 && v <= 42) { appt[field] = v; renderRegoloPreview(); }
+}
+
+function toggleAppt(id) {
+  const appt = apptList.find(a => a.id === id);
+  if (!appt) return;
+  appt.on = !appt.on;
+  const row = document.getElementById(`appt-row-${id}`);
+  if (row) {
+    row.className = 'appt-row' + (appt.on ? '' : ' disabled');
+    const btn = row.querySelector('.appt-toggle');
+    btn.className = `appt-toggle ${appt.on ? 'on' : 'off'}`;
+    btn.textContent = appt.on ? '✓' : '○';
+  }
+  renderRegoloPreview();
+}
+
+function confirmAddAppt() {
+  const name = document.getElementById('newApptName').value.trim();
+  if (!name) { document.getElementById('newApptName').focus(); return; }
+  const min = parseInt(document.getElementById('newApptMin').value) || 20;
+  const max = parseInt(document.getElementById('newApptMax').value) || min;
+  const tag = document.getElementById('newApptTag').value;
+  apptList.push({ id:'custom_'+apptNextId++, name, min, max:Math.max(min,max), tag, on:true, custom:true });
+  // Reset form
+  document.getElementById('newApptName').value = '';
+  document.getElementById('newApptMin').value = '';
+  document.getElementById('newApptMax').value = '';
+  document.getElementById('addApptForm').style.display = 'none';
+  renderApptList();
+  renderRegoloPreview();
+}
+
+// ── TABELLA SETTIMANA PER SETTIMANA ──────────────────────────────
+function renderRegoloPreview() {
+  const container = document.getElementById('regoloPreviewContent');
+  const effUM = getEffectiveUM();
+
+  if (!effUM) {
+    container.innerHTML = `<div class="no-um-warning">
+      ⚠️ Inserisci la U.M. nei dati cartella<br>per visualizzare le date esatte.
+    </div>`;
+    return;
+  }
+
+  const oggi = new Date();
+  const effDPP = getEffectiveDPP();
+  const activeAppts = apptList.filter(a => a.on);
+
+  // Mappa settimana → appuntamenti che iniziano in quella settimana
+  const apptPerSett = {};
+  activeAppts.forEach(a => {
+    const key = a.min;
+    if (!apptPerSett[key]) apptPerSett[key] = [];
+    apptPerSett[key].push(a);
+  });
+
+  const TAG_COLORS = {
+    eco:    { bg:'#dbeafe', color:'#1e40af' },
+    screen: { bg:'#dcfce7', color:'#166534' },
+    vac:    { bg:'#fdf4ff', color:'#7e22ce' },
+    parto:  { bg:'#fef3c7', color:'#92400e' },
+    visita: { bg:'#f0fdf4', color:'#15803d' },
+  };
+
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:11px;font-family:'Inter',sans-serif;">
+    <thead><tr style="background:#1b2d4f;color:white;">
+      <th style="padding:7px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.5px;">Giorno</th>
+      <th style="padding:7px 6px;text-align:center;font-size:9px;text-transform:uppercase;">Sett.</th>
+      <th style="padding:7px 6px;text-align:center;font-size:9px;text-transform:uppercase;">Mese</th>
+      <th style="padding:7px 6px;text-align:right;font-size:9px;text-transform:uppercase;">cm</th>
+      <th style="padding:7px 6px;text-align:right;font-size:9px;text-transform:uppercase;">gr</th>
+      <th style="padding:7px 8px;text-align:left;font-size:9px;text-transform:uppercase;">Appuntamenti / Note</th>
+    </tr></thead><tbody>`;
+
+  // Riga U.M.
+  html += `<tr style="background:#fdf4ff;">
+    <td style="padding:5px 8px;border-bottom:1px solid #e8ecf0;"><strong>${formatDate(effUM)}</strong></td>
+    <td style="padding:5px 6px;border-bottom:1px solid #e8ecf0;text-align:center;"><strong>U.M.</strong></td>
+    <td colspan="4" style="padding:5px 8px;border-bottom:1px solid #e8ecf0;color:#7e22ce;font-weight:600;">🟤 Ultima Mestruazione · Inizio gravidanza</td>
+  </tr>`;
+
+  let prevMese = '';
+
+  for (let sett = 1; sett <= 42; sett++) {
+    const dataInizio = new Date(effUM);
+    dataInizio.setDate(dataInizio.getDate() + sett * 7);
+
+    const isCurrentWeek = oggi >= dataInizio && oggi < new Date(dataInizio.getTime() + 7*24*3600*1000);
+    const isDPP = effDPP && Math.abs(dataInizio - effDPP) < 4*24*3600*1000 && sett === 40;
+    const isPast = dataInizio < oggi && !isCurrentWeek;
+
+    const mese = meseLunare(sett);
+    const showMese = mese !== prevMese ? mese : '';
+    prevMese = mese;
+
+    const dati = REGOLO_DATA[sett] || [null, null];
+    const cm = dati[0] != null ? dati[0] : '—';
+    const gr = dati[1] != null ? dati[1].toLocaleString('it-IT') : '—';
+
+    // Appuntamenti per questa settimana
+    const thisAppts = apptPerSett[sett] || [];
+    // Appuntamenti attivi che includono questa settimana nella finestra (ma non iniziano qui)
+    const inWindowAppts = activeAppts.filter(a => a.min < sett && a.max >= sett);
+    const allAppts = [...thisAppts, ...inWindowAppts];
+
+    let apptHTML = '';
+    if (isCurrentWeek) apptHTML += `<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#f59e0b;color:white;font-size:10px;font-weight:700;margin-right:4px;">← sei qui</span>`;
+    if (isDPP) apptHTML += `<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#16a34a;color:white;font-size:10px;font-weight:700;margin-right:4px;">📅 D.P.P.</span>`;
+
+    thisAppts.forEach(a => {
+      const c = TAG_COLORS[a.tag] || TAG_COLORS.visita;
+      apptHTML += `<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:${c.bg};color:${c.color};font-size:10px;font-weight:600;margin:1px 2px;">${a.name}</span>`;
+    });
+    inWindowAppts.forEach(a => {
+      const c = TAG_COLORS[a.tag] || TAG_COLORS.visita;
+      apptHTML += `<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:${c.bg};color:${c.color};font-size:10px;font-weight:500;margin:1px 2px;opacity:0.7;">${a.name} ⟶</span>`;
+    });
+
+    let rowBg = '';
+    let rowStyle = '';
+    if (isCurrentWeek) { rowBg = '#fef3c7'; rowStyle = 'border-left:3px solid #f59e0b;font-weight:700;'; }
+    else if (isDPP) { rowBg = '#dcfce7'; rowStyle = 'border-left:3px solid #16a34a;font-weight:700;'; }
+    else if (sett % 2 === 0) { rowBg = '#f8fafb'; }
+
+    const textColor = isPast ? 'color:#9ca3af;' : '';
+
+    html += `<tr style="background:${rowBg};${textColor}${rowStyle}">
+      <td style="padding:5px 8px;border-bottom:1px solid #e8ecf0;">${formatDate(dataInizio)}</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #e8ecf0;text-align:center;font-weight:${isCurrentWeek?'700':'500'};">${sett}ª</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #e8ecf0;text-align:center;font-size:10px;color:#64748b;font-weight:600;">${showMese}</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #e8ecf0;text-align:right;">${cm}</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #e8ecf0;text-align:right;">${gr}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #e8ecf0;">${apptHTML}</td>
+    </tr>`;
+  }
+
+  html += '</tbody></table>';
+  html += `<div style="margin-top:8px;font-size:10px;color:#94a3b8;">
+    Peso fetale: stime mediane INTERGROWTH-21st · Altezza fundus: curva standard ·
+    <strong style="background:#fef3c7;padding:0 4px;border-radius:3px;color:#92400e;">← sei qui</strong> = settimana attuale
+  </div>`;
+
+  container.innerHTML = html;
+}
+
+// ── OPEN / CLOSE ─────────────────────────────────────────────────
+function openRegolo() {
+  if (apptList.length === 0) resetApptDefaults();
+  ecoCorrezioneGiorni = parseInt(document.getElementById('ecoCorrezione')?.value) || 0;
+  updateRegoloSubtitle();
+  renderApptList();
+  renderRegoloPreview();
+  document.getElementById('regoloOverlay').style.display = 'flex';
+}
+
+function closeRegolo() {
+  document.getElementById('regoloOverlay').style.display = 'none';
+}
+
+function closeRegoloOnOutside(e) {
+  if (e.target === document.getElementById('regoloOverlay')) closeRegolo();
+}
+
+// ── STAMPA ───────────────────────────────────────────────────────
+function printRegoloNew() {
+  if (!getEffectiveUM()) { showToast('⚠️ Inserisci la U.M. per stampare', 'error'); return; }
+  const nome = document.getElementById('inputData').value.match(/Sig\.?r?a?\.?\s*:?\s*([A-ZÀÈÉÌÒÙ][a-zA-ZÀ-ÿ\s]+)/)?.[1]?.trim() || '';
+  const effUM  = getEffectiveUM();
+  const effDPP = getEffectiveDPP();
+  const corrTxt = ecoCorrezioneGiorni !== 0 ? ` · Correzione eco: ${ecoCorrezioneGiorni > 0 ? '+' : ''}${ecoCorrezioneGiorni}gg` : '';
+
+  const win = window.open('', '_blank', 'width=900,height=750');
+  win.document.write(`<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">
+    <title>Regolo Ostetrico${nome ? ' — Sig.ra ' + nome : ''}</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 10.5px; padding: 22px; color: #1e1e1e; }
+      h1 { font-size: 16px; font-weight: 700; margin-bottom: 3px; color: #1b2d4f; }
+      h2 { font-size: 11px; font-weight: 400; color: #64748b; margin-bottom: 14px; }
+      table { width:100%; border-collapse:collapse; }
+      thead th { background:#1b2d4f; color:white; padding:5px 7px; text-align:left; font-size:9px; text-transform:uppercase; }
+      tbody td { padding:4px 7px; border-bottom:1px solid #e8ecf0; vertical-align:middle; }
+      tbody tr:nth-child(even) td { background:#f8fafb; }
+      .curr td { background:#fef3c7!important; font-weight:700; border-left:3px solid #f59e0b; }
+      .dpp td  { background:#dcfce7!important; font-weight:700; border-left:3px solid #16a34a; }
+      .past td { color:#9ca3af; }
+      .chip { display:inline-block; padding:1px 6px; border-radius:6px; font-size:9px; font-weight:700; margin:1px; }
+      .sei-qui { background:#f59e0b; color:white; }
+      .eco { background:#dbeafe; color:#1e40af; }
+      .screen { background:#dcfce7; color:#166534; }
+      .vac { background:#fdf4ff; color:#7e22ce; }
+      .parto { background:#fef3c7; color:#92400e; }
+      .visita { background:#f0fdf4; color:#15803d; }
+      .footer { margin-top:14px; font-size:8.5px; color:#94a3b8; border-top:1px solid #e2e8f0; padding-top:6px; }
+    </style></head><body>
+    <h1>📅 Regolo Ostetrico${nome ? ' — Sig.ra ' + nome : ''}</h1>
+    <h2>U.M. ${formatDate(effUM)}${corrTxt} &nbsp;·&nbsp; D.P.P. ${formatDate(effDPP)} &nbsp;·&nbsp; EG oggi: ${currentEG ? currentEG.label : '—'}</h2>
+    ${buildRegoloTableHTML(effUM, true)}
+    <div class="footer">Documento generato da ClinicalScribe ObGyn · Dott. Carlo Piscicelli – Gemelli IRCCS<br>Le date sono indicative e possono variare in base all'andamento clinico della gravidanza.</div>
+    </body></html>`);
+  win.document.close();
+  win.print();
+}
+
+// Genera HTML tabella per stampa (riutilizzabile anche per report)
+function buildRegoloTableHTML(effUM, forPrint = false) {
+  const oggi = new Date();
+  const activeAppts = apptList.filter(a => a.on);
+  const apptPerSett = {};
+  activeAppts.forEach(a => {
+    if (!apptPerSett[a.min]) apptPerSett[a.min] = [];
+    apptPerSett[a.min].push(a);
+  });
+
+  let html = `<table>
+    <thead><tr>
+      <th>Giorno</th><th style="text-align:center;">Sett.</th><th style="text-align:center;">Mese</th>
+      <th style="text-align:right;">cm</th><th style="text-align:right;">gr</th>
+      <th>Appuntamenti</th>
+    </tr></thead><tbody>`;
+
+  // Riga UM
+  html += `<tr><td><strong>${formatDate(effUM)}</strong></td><td style="text-align:center;"><strong>U.M.</strong></td>
+    <td></td><td></td><td></td><td style="color:#7e22ce;font-weight:600;">Ultima Mestruazione</td></tr>`;
+
+  let prevMese = '';
+  for (let sett = 1; sett <= 42; sett++) {
+    const d = new Date(effUM); d.setDate(d.getDate() + sett * 7);
+    const isCurrentWeek = oggi >= d && oggi < new Date(d.getTime() + 7*24*3600*1000);
+    const isDPP = sett === 40;
+    const isPast = d < oggi && !isCurrentWeek;
+    const mese = meseLunare(sett);
+    const showMese = mese !== prevMese ? mese : ''; prevMese = mese;
+    const dati = REGOLO_DATA[sett] || [null,null];
+    const cm = dati[0] != null ? dati[0] : '—';
+    const gr = dati[1] != null ? dati[1].toLocaleString('it-IT') : '—';
+
+    const thisAppts = apptPerSett[sett] || [];
+    let chips = '';
+    if (isCurrentWeek) chips += `<span class="chip sei-qui">← sei qui</span>`;
+    if (isDPP) chips += `<span class="chip parto">📅 D.P.P.</span>`;
+    thisAppts.forEach(a => { chips += `<span class="chip ${a.tag}">${a.name}</span>`; });
+
+    const rowClass = isCurrentWeek ? 'curr' : isDPP ? 'dpp' : isPast ? 'past' : '';
+    html += `<tr class="${rowClass}">
+      <td>${formatDate(d)}</td>
+      <td style="text-align:center;">${sett}ª</td>
+      <td style="text-align:center;font-size:9px;color:#64748b;">${showMese}</td>
+      <td style="text-align:right;">${cm}</td>
+      <td style="text-align:right;">${gr}</td>
+      <td>${chips}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  buildPackageUI();
+  updateCounselingBtn();
+  updateRxVisibility();
+});
+
+// ── COUNSELING BUTTON VISIBILITY ─────────────────────────────────
+function updateCounselingBtn() {
+  const rt = document.getElementById('reportType').value;
+  const show = rt === 'obstetric' || rt === 'gynecologic';
+  document.getElementById('counselingBtnContainer').style.display = show ? 'flex' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EG CALCULATOR
+// ═══════════════════════════════════════════════════════════════
+let currentEG = null; // { sett, giorni, label, um }
+
+function parseUM(text) {
+  // Cerca pattern tipo U.M.: 11/06/2025 o UM: 11/06/25 o u.m. 11-6-2025
+  const regex = /U\.?M\.?\s*[:=]?\s*(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/i;
+  const m = text.match(regex);
+  if (!m) return null;
+  let [, d, mo, y] = m;
+  if (y.length === 2) y = '20' + y;
+  const date = new Date(+y, +mo - 1, +d);
+  if (isNaN(date.getTime())) return null;
+  return date;
+}
+
+function calcolaEG(um) {
+  const oggi = new Date();
+  const diffMs = oggi - um;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays < 0 || diffDays > 300) return null;
+  const sett = Math.floor(diffDays / 7);
+  const giorni = diffDays % 7;
+  return { sett, giorni, label: `${sett} sett + ${giorni} gg`, um };
+}
+
+function calcolaDPP(um) {
+  const dpp = new Date(um);
+  dpp.setDate(dpp.getDate() + 280); // 40 settimane
+  return dpp;
+}
+
+function formatDate(d) {
+  return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+}
+
+function onInputChange() {
+  const rt = document.getElementById('reportType').value;
+
+  // Parse badges (tutte le modalità tranne surgical)
+  parseInputBadges();
+
+  if (rt !== 'obstetric') return;
+  
+  const text = document.getElementById('inputData').value;
+  const um = parseUM(text);
+  const badge = document.getElementById('egBadge');
+  
+  if (!um) {
+    currentEG = null;
+    badge.innerHTML = '';
+    return;
+  }
+  
+  const eg = calcolaEG(um);
+  if (!eg) {
+    currentEG = null;
+    badge.innerHTML = '';
+    return;
+  }
+  
+  currentEG = eg;
+  const dpp = calcolaDPP(um);
+  
+  badge.innerHTML = `
+    <div class="eg-badge">
+      🤰 <strong>EG calcolata: ${eg.label}</strong>
+      <span class="eg-badge-detail">· U.M. ${formatDate(um)} · D.P.P. ${formatDate(dpp)}</span>
+    </div>
+    <button class="btn-regolo" style="margin-left:12px;" onclick="openRegolo()">
+      📅 Regolo Ostetrico
+    </button>
+  `;
+}
+
+// ── STAMPA COMBINATA (report + regolo opzionale) ─────────────────
+function stampaCombinata() {
+  const includiRegolo = document.getElementById('includiRegoloCheck')?.checked;
+  if (!includiRegolo || !getEffectiveUM() || apptList.length === 0) {
+    window.print();
+    return;
+  }
+
+  // Genera finestra di stampa combinata
+  const frame = document.getElementById('previewFrame');
+  const badge = frame.querySelector('.edit-badge');
+  const reportHTML = frame.innerHTML.replace(/<div class="edit-badge"[^>]*>.*?<\/div>/s, '');
+
+  const nome = document.getElementById('inputData').value.match(/Sig\.?r?a?\.?\s*:?\s*([A-ZÀÈÉÌÒÙ][a-zA-ZÀ-ÿ\s]+)/)?.[1]?.trim() || '';
+  const effUM  = getEffectiveUM();
+  const effDPP = getEffectiveDPP();
+  const corrTxt = ecoCorrezioneGiorni !== 0 ? ` · Correzione eco: ${ecoCorrezioneGiorni > 0 ? '+' : ''}${ecoCorrezioneGiorni}gg` : '';
+  const regoloHTML = buildRegoloTableHTML(effUM, true);
+
+  const reportStyles = document.querySelector('style').textContent;
+
+  const win = window.open('', '_blank', 'width=900,height=750');
+  win.document.write(`<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">
+    <title>Relazione + Regolo</title>
+    <style>
+      ${reportStyles}
+      body { background: white !important; padding: 20px !important; font-family: 'Segoe UI', Arial, sans-serif; }
+      .regolo-section { margin-top: 40px; padding-top: 20px; border-top: 2.5px solid #1b2d4f; page-break-before: auto; }
+      .regolo-section h3 { font-size: 13px; font-weight: 700; color: #1b2d4f; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+      .regolo-section h4 { font-size: 11px; color: #64748b; font-weight: 400; margin-bottom: 12px; }
+      table { width:100%; border-collapse:collapse; }
+      thead th { background:#1b2d4f; color:white; padding:5px 7px; text-align:left; font-size:9px; text-transform:uppercase; }
+      tbody td { padding:4px 7px; border-bottom:1px solid #e8ecf0; font-size:10px; vertical-align:middle; }
+      tbody tr:nth-child(even) td { background:#f8fafb; }
+      .curr td { background:#fef3c7!important; font-weight:700; border-left:3px solid #f59e0b; }
+      .dpp td  { background:#dcfce7!important; font-weight:700; border-left:3px solid #16a34a; }
+      .past td { color:#9ca3af; }
+      .chip { display:inline-block; padding:1px 6px; border-radius:5px; font-size:8.5px; font-weight:700; margin:1px; }
+      .sei-qui { background:#f59e0b; color:white; }
+      .eco { background:#dbeafe; color:#1e40af; }
+      .screen { background:#dcfce7; color:#166534; }
+      .vac { background:#fdf4ff; color:#7e22ce; }
+      .parto { background:#fef3c7; color:#92400e; }
+      .visita { background:#f0fdf4; color:#15803d; }
+    </style></head><body>
+    <div class="report">${reportHTML}</div>
+    <div class="regolo-section">
+      <h3>📅 Regolo Ostetrico${nome ? ' — Sig.ra ' + nome : ''}</h3>
+      <h4>U.M. ${formatDate(effUM)}${corrTxt} &nbsp;·&nbsp; D.P.P. ${formatDate(effDPP)} &nbsp;·&nbsp; EG oggi: ${currentEG ? currentEG.label : '—'}</h4>
+      ${regoloHTML}
+    </div>
+    </body></html>`);
+  win.document.close();
+  win.print();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS / UI
+// ═══════════════════════════════════════════════════════════════
 function setSurgicalFormat(fmt) {
   surgicalFormat = fmt;
   const btnD = document.getElementById('surgFmtDetailed');
@@ -862,97 +2023,85 @@ function toggleSettings() {
   toggle.classList.toggle('collapsed');
 }
 
-// ── Mappa accesso → patologie disponibili ──────────────────────
 const PATOLOGIE_MAP = {
   isteroscopico: [
-    { v: 'polipo endometriale',            l: 'Polipo endometriale' },
-    { v: 'mioma sottomucoso',              l: 'Mioma sottomucoso (G0/G1/G2)' },
-    { v: 'setto uterino',                  l: 'Setto uterino' },
-    { v: 'sinechie uterine (Asherman)',    l: 'Sinechie uterine (Asherman)' },
-    { v: 'ablazione endometriale',         l: 'Ablazione endometriale' },
-    { v: 'corpo estraneo / IUD',           l: 'Corpo estraneo / IUD' },
-    { v: 'biopsia endometriale',           l: 'Biopsia endometriale diretta' },
+    { v: 'polipo endometriale', l: 'Polipo endometriale' },
+    { v: 'mioma sottomucoso', l: 'Mioma sottomucoso (G0/G1/G2)' },
+    { v: 'setto uterino', l: 'Setto uterino' },
+    { v: 'sinechie uterine (Asherman)', l: 'Sinechie uterine (Asherman)' },
+    { v: 'ablazione endometriale', l: 'Ablazione endometriale' },
+    { v: 'corpo estraneo / IUD', l: 'Corpo estraneo / IUD' },
+    { v: 'biopsia endometriale', l: 'Biopsia endometriale diretta' },
   ],
   laparoscopico: [
-    { v: 'cisti ovarica (cistectomia)',    l: 'Cisti ovarica (cistectomia)' },
-    { v: 'mioma uterino (miomectomia)',    l: 'Mioma uterino (miomectomia)' },
-    { v: 'endometriosi',                   l: 'Endometriosi' },
-    { v: 'gravidanza ectopica',            l: 'Gravidanza ectopica' },
-    { v: 'salpingectomia / annessiectomia',l: 'Salpingectomia / Annessiectomia' },
-    { v: 'isterectomia laparoscopica',     l: 'Isterectomia (TLH/LAVH)' },
-    { v: 'sterilizzazione tubarica',       l: 'Sterilizzazione tubarica' },
-    { v: 'adesiolisi pelvica',             l: 'Adesiolisi pelvica' },
-    { v: 'miomectomia laparoscopica',      l: 'Miomectomia laparoscopica' },
+    { v: 'cisti ovarica (cistectomia)', l: 'Cisti ovarica (cistectomia)' },
+    { v: 'mioma uterino (miomectomia)', l: 'Mioma uterino (miomectomia)' },
+    { v: 'endometriosi', l: 'Endometriosi' },
+    { v: 'gravidanza ectopica', l: 'Gravidanza ectopica' },
+    { v: 'salpingectomia / annessiectomia', l: 'Salpingectomia / Annessiectomia' },
+    { v: 'isterectomia laparoscopica', l: 'Isterectomia (TLH/LAVH)' },
+    { v: 'sterilizzazione tubarica', l: 'Sterilizzazione tubarica' },
+    { v: 'adesiolisi pelvica', l: 'Adesiolisi pelvica' },
   ],
   laparotomico: [
     { v: 'mioma uterino (miomectomia laparotomica)', l: 'Mioma uterino (miomectomia)' },
-    { v: 'isterectomia laparotomica',      l: 'Isterectomia laparotomica' },
-    { v: 'cisti ovarica (laparotomica)',   l: 'Cisti ovarica (laparotomica)' },
-    { v: 'endometriosi (laparotomica)',    l: 'Endometriosi (laparotomica)' },
-    { v: 'staging oncologico',             l: 'Staging oncologico' },
-    { v: 'adesiolisi (laparotomica)',      l: 'Adesiolisi (laparotomica)' },
+    { v: 'isterectomia laparotomica', l: 'Isterectomia laparotomica' },
+    { v: 'cisti ovarica (laparotomica)', l: 'Cisti ovarica (laparotomica)' },
+    { v: 'staging oncologico', l: 'Staging oncologico' },
+    { v: 'adesiolisi (laparotomica)', l: 'Adesiolisi (laparotomica)' },
   ],
   vaginale: [
-    { v: 'isterectomia vaginale',          l: 'Isterectomia vaginale' },
+    { v: 'isterectomia vaginale', l: 'Isterectomia vaginale' },
     { v: 'prolasso genitale (correzione)', l: 'Prolasso genitale (colporrafia ant./post.)' },
-    { v: 'incontinenza urinaria (TOT/TVT)',l: 'Incontinenza urinaria (TOT/TVT)' },
-    { v: 'culdocentesi',                   l: 'Culdocentesi' },
-    { v: 'colposcopia con biopsia',        l: 'Colposcopia con biopsia cervicale' },
-    { v: 'LEEP / conizzazione',            l: 'LEEP / Conizzazione cervicale' },
+    { v: 'incontinenza urinaria (TOT/TVT)', l: 'Incontinenza urinaria (TOT/TVT)' },
+    { v: 'colposcopia con biopsia', l: 'Colposcopia con biopsia cervicale' },
+    { v: 'LEEP / conizzazione', l: 'LEEP / Conizzazione cervicale' },
   ],
   'vulvare/perineale': [
-    { v: 'condilomatosi vulvare',                    l: 'Condilomatosi vulvare' },
-    { v: 'bartholinite (marsupializzazione)',         l: 'Bartholinite (marsupializzazione)' },
-    { v: 'cisti del dotto di Bartolino',             l: 'Cisti dotto di Bartolino' },
-    { v: 'biopsia vulvare',                          l: 'Biopsia vulvare' },
-    { v: 'vulvectomia parziale',                     l: 'Vulvectomia parziale' },
-    { v: 'episioplastica / perineorrafia',            l: 'Episioplastica / Perineorrafia' },
+    { v: 'condilomatosi vulvare', l: 'Condilomatosi vulvare' },
+    { v: 'bartholinite (marsupializzazione)', l: 'Bartholinite (marsupializzazione)' },
+    { v: 'biopsia vulvare', l: 'Biopsia vulvare' },
+    { v: 'episioplastica / perineorrafia', l: 'Episioplastica / Perineorrafia' },
   ],
   ostetrico: [
-    { v: 'taglio cesareo',                           l: 'Taglio cesareo' },
-    { v: 'revisione cavità uterina (post-partum)',   l: 'Revisione cavità uterina (post-partum)' },
-    { v: 'cerchiaggio cervicale',                    l: 'Cerchiaggio cervicale' },
-    { v: 'revisione della cicatrice uterina',        l: 'Revisione cicatrice uterina' },
+    { v: 'taglio cesareo', l: 'Taglio cesareo' },
+    { v: 'revisione cavità uterina (post-partum)', l: 'Revisione cavità uterina (post-partum)' },
+    { v: 'cerchiaggio cervicale', l: 'Cerchiaggio cervicale' },
+    { v: 'revisione della cicatrice uterina', l: 'Revisione cicatrice uterina' },
   ],
 };
 
 function onReportTypeChange() {
   const reportType = document.getElementById('reportType').value;
-  const surgicalFields = document.getElementById('surgicalFields');
-  const formatGroup = document.getElementById('formatGroup');
-  const inputTitle = document.getElementById('inputPanelTitle');
-  const btnLabel = document.getElementById('generateBtnLabel');
-  const headerGroup = document.getElementById('headerGroup');
-  const customHeaderGroup = document.getElementById('customHeaderGroup');
-  const doctorNameGroup = document.getElementById('doctorNameGroup');
-  const qualificaGroup = document.getElementById('qualificaGroup');
-
   const isSurgical = reportType === 'surgical';
-
-  surgicalFields.style.display = isSurgical ? 'block' : 'none';
-  if (formatGroup) formatGroup.style.display = isSurgical ? 'none' : '';
-
-  // Nascondi intestazione, nome e qualifica per registro operatorio
-  headerGroup.style.display       = isSurgical ? 'none' : '';
-  doctorNameGroup.style.display   = isSurgical ? 'none' : '';
-  qualificaGroup.style.display    = isSurgical ? 'none' : '';
-  if (customHeaderGroup && !isSurgical) {
-    // mantieni visibilità customHeaderGroup solo se headerType = custom
-    const ht = document.getElementById('headerType').value;
-    customHeaderGroup.style.display = ht === 'custom' ? 'block' : 'none';
-  } else if (customHeaderGroup && isSurgical) {
-    customHeaderGroup.style.display = 'none';
-  }
-
+  const isObstetric = reportType === 'obstetric';
+  
+  document.getElementById('surgicalFields').style.display = isSurgical ? 'block' : 'none';
+  document.getElementById('formatGroup').style.display = isSurgical ? 'none' : '';
+  document.getElementById('headerGroup').style.display = isSurgical ? 'none' : '';
+  document.getElementById('doctorNameGroup').style.display = isSurgical ? 'none' : '';
+  document.getElementById('qualificaGroup').style.display = isSurgical ? 'none' : '';
+  
+  const customHG = document.getElementById('customHeaderGroup');
+  if (isSurgical) customHG.style.display = 'none';
+  else if (document.getElementById('headerType').value === 'custom') customHG.style.display = 'block';
+  
+  document.getElementById('egBadgeContainer').style.display = isObstetric ? 'block' : 'none';
+  
+  updateCounselingBtn();
+  updateRxVisibility();
+  
   if (isSurgical) {
-    inputTitle.textContent = '🔪 Dati Intervento';
-    btnLabel.textContent = '✨ Genera Verbale Operatorio';
+    document.getElementById('inputPanelTitle').textContent = '🔪 Dati Intervento';
+    document.getElementById('generateBtnLabel').textContent = '✨ Genera Verbale Operatorio';
   } else {
-    inputTitle.textContent = '📋 Dati Cartella Clinica';
-    btnLabel.textContent = '✨ Genera Relazione con AI';
+    document.getElementById('inputPanelTitle').textContent = '📋 Dati Cartella Clinica';
+    document.getElementById('generateBtnLabel').textContent = '✨ Genera Relazione con AI';
     document.querySelectorAll('.access-chip.active').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.patologia-chip.active').forEach(c => c.classList.remove('active'));
   }
+  
+  if (isObstetric) onInputChange();
 }
 
 function toggleAccesso(btn) {
@@ -961,31 +2110,18 @@ function toggleAccesso(btn) {
 }
 
 function aggiornaPatologie() {
-  const accessiAttivi = Array.from(document.querySelectorAll('.access-chip.active'))
-                             .map(c => c.dataset.accesso);
+  const accessiAttivi = Array.from(document.querySelectorAll('.access-chip.active')).map(c => c.dataset.accesso);
   const group = document.getElementById('patologieGroup');
   const container = document.getElementById('patologieChips');
-
-  if (accessiAttivi.length === 0) {
-    group.style.display = 'none';
-    container.innerHTML = '';
-    return;
-  }
-
-  // Raccogli patologie uniche mantenendo l'ordine per accesso
+  if (accessiAttivi.length === 0) { group.style.display = 'none'; container.innerHTML = ''; return; }
+  
   const seen = new Set();
   const patologie = [];
   accessiAttivi.forEach(acc => {
-    (PATOLOGIE_MAP[acc] || []).forEach(p => {
-      if (!seen.has(p.v)) { seen.add(p.v); patologie.push(p); }
-    });
+    (PATOLOGIE_MAP[acc] || []).forEach(p => { if (!seen.has(p.v)) { seen.add(p.v); patologie.push(p); } });
   });
-
-  // Salva selezioni precedenti
-  const selezionate = new Set(
-    Array.from(container.querySelectorAll('.patologia-chip.active')).map(c => c.dataset.patologia)
-  );
-
+  
+  const selezionate = new Set(Array.from(container.querySelectorAll('.patologia-chip.active')).map(c => c.dataset.patologia));
   container.innerHTML = '';
   patologie.forEach(p => {
     const btn = document.createElement('button');
@@ -996,7 +2132,6 @@ function aggiornaPatologie() {
     btn.onclick = () => btn.classList.toggle('active');
     container.appendChild(btn);
   });
-
   group.style.display = 'block';
 }
 
@@ -1009,84 +2144,58 @@ function getPatologieSelezionate() {
 }
 
 function updateCustomHeader() {
-  const headerType = document.getElementById('headerType').value;
-  const customGroup = document.getElementById('customHeaderGroup');
-  customGroup.style.display = headerType === 'custom' ? 'block' : 'none';
+  document.getElementById('customHeaderGroup').style.display = document.getElementById('headerType').value === 'custom' ? 'block' : 'none';
 }
 
 function getHeaderConfig() {
   const headerType = document.getElementById('headerType').value;
   const headers = {
-    gemelli: {
-      institution: 'Gemelli IRCCS',
-      department: 'Dipartimento di Ostetricia e Ginecologia'
-    },
-    balduina: {
-      institution: 'Balduina Medica',
-      department: ''
-    },
-    apollodoro: {
-      institution: 'Poliambulatorio Apollodoro',
-      department: ''
-    },
-    itor: {
-      institution: 'Nuova Itor Casa di Cura',
-      department: 'U.O. Ostetricia e Ginecologia'
-    },
-    custom: {
-      institution: '',
-      department: ''
-    }
+    gemelli:    { institution: 'Gemelli IRCCS', department: 'Dipartimento di Ostetricia e Ginecologia' },
+    balduina:   { institution: 'Balduina Medica', department: '' },
+    apollodoro: { institution: 'Poliambulatorio Apollodoro', department: '' },
+    itor:       { institution: 'Nuova Itor Casa di Cura', department: 'U.O. Ostetricia e Ginecologia' },
+    custom:     { institution: '', department: '' },
   };
-  
   if (headerType === 'custom') {
-    const customText = document.getElementById('customHeader').value.trim();
-    const lines = customText.split('\n');
-    return {
-      institution: lines[0] || '',
-      department: lines[1] || ''
-    };
+    const lines = document.getElementById('customHeader').value.trim().split('\n');
+    return { institution: lines[0] || '', department: lines[1] || '' };
   }
-  
   return headers[headerType];
 }
 
 function getCurrentDate() {
-  const today = new Date();
-  const dd = String(today.getDate()).padStart(2, '0');
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const yyyy = today.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
+  const t = new Date();
+  return String(t.getDate()).padStart(2,'0') + '/' + String(t.getMonth()+1).padStart(2,'0') + '/' + t.getFullYear();
 }
 
+// ═══════════════════════════════════════════════════════════════
+// GENERATE
+// ═══════════════════════════════════════════════════════════════
 async function generateReport() {
   const inputData = document.getElementById('inputData').value.trim();
   const reportType = document.getElementById('reportType').value;
-  const reportFormat = document.getElementById('reportFormat') ? document.getElementById('reportFormat').value : 'complete';
+  const reportFormat = document.getElementById('reportFormat')?.value || 'complete';
   const doctorName = document.getElementById('doctorName').value.trim();
   const doctorQualifica = document.getElementById('doctorQualifica')?.value.trim() || '';
+  const aiDisclaimer = document.getElementById('aiDisclaimerCheck')?.checked || false;
   
-  // Per il registro operatorio i dati liberi sono facoltativi se è selezionato almeno un accesso
-  if (!inputData) {
-    if (reportType === 'surgical') {
-      if (getAccessiSelezionati().length === 0) {
-        showToast('⚠️ Seleziona almeno una via di accesso', 'error');
-        return;
-      }
-      // OK: chips sufficienti, nessun testo obbligatorio
-    } else {
-      showToast('⚠️ Inserisci i dati della cartella', 'error');
-      return;
-    }
+  // Inject rx prescriptions into input text
+  const rxItems = getRxPayload();
+  let cartella = inputData;
+  if (rxItems.length > 0 && reportType !== 'surgical') {
+    cartella += '\n\nPRESCRIZIONI AGGIUNTIVE DA INCLUDERE OBBLIGATORIAMENTE nella sezione Piano/Prescrizioni:\n' +
+      rxItems.map(rx => `- ${rx}`).join('\n');
+  }
+  
+  if (!inputData && reportType !== 'surgical') { showToast('⚠️ Inserisci i dati della cartella', 'error'); return; }
+  if (!inputData && reportType === 'surgical' && getAccessiSelezionati().length === 0) {
+    showToast('⚠️ Seleziona almeno una via di accesso', 'error'); return;
   }
   
   const header = getHeaderConfig();
   const oggi = getCurrentDate();
-  
-  // Surgical-specific fields
-  const tipoAccesso = getAccessiSelezionati().join(' + ') || '';
-  const tipoIntervento = getPatologieSelezionate().join(' + ') || '';
-  const problematiche = document.getElementById('problematiche')?.value.trim() || '';
+  const { pkgTopics, customTopics: customC } = getCounselingPayload();
+  const etaGestazionale = (reportType === 'obstetric' && currentEG) ? currentEG.label : null;
   
   const loader = document.getElementById('loader');
   const btn = document.getElementById('generateBtn');
@@ -1097,51 +2206,35 @@ async function generateReport() {
   preview.innerHTML = '';
   
   try {
-    const payload = {
-      cartella: inputData,
-      reportType,
-      reportFormat,
-      header,
-      doctorName,
-      doctorQualifica,
-      oggi
-    };
+    const payload = { cartella, reportType, reportFormat, header, doctorName, doctorQualifica, oggi, counselingTopics: pkgTopics, customCounseling: customC, etaGestazionale };
     
     if (reportType === 'surgical') {
-      payload.tipoAccesso = tipoAccesso;
-      payload.tipoIntervento = tipoIntervento;
-      payload.problematiche = problematiche;
+      payload.tipoAccesso = getAccessiSelezionati().join(' + ');
+      payload.tipoIntervento = getPatologieSelezionate().join(' + ');
+      payload.problematiche = document.getElementById('problematiche')?.value.trim() || '';
       payload.surgicalFormat = surgicalFormat;
     }
     
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Errore generazione');
-    }
+    const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    if (!response.ok) { const e = await response.json(); throw new Error(e.error || 'Errore generazione'); }
     
     const data = await response.json();
-    
-    preview.innerHTML = data.html;
+    let generatedHtml = data.html;
+    if (aiDisclaimer) generatedHtml = appendAIDisclaimer(generatedHtml);
+    preview.innerHTML = generatedHtml;
     preview.setAttribute('contenteditable', 'true');
     
-    const editBadge = document.createElement('div');
-    editBadge.className = 'edit-badge';
-    editBadge.textContent = 'Modificabile';
-    preview.appendChild(editBadge);
+    const badge = document.createElement('div');
+    badge.className = 'edit-badge'; badge.textContent = 'Modificabile';
+    preview.appendChild(badge);
     
     document.getElementById('outputActions').style.display = 'flex';
     
-    const label = reportType === 'surgical' ? 'verbale operatorio' : (reportFormat === 'brief' ? 'nota sintetica' : 'relazione completa');
-    showToast(`✅ ${label.charAt(0).toUpperCase() + label.slice(1)} generata!`);
+    const label = reportType === 'surgical' ? 'Verbale operatorio' : (reportFormat === 'brief' ? 'Nota sintetica' : 'Relazione completa');
+    showToast(`✅ ${label} generata!`);
     
     if (data.usage) {
-      document.getElementById('costEstimate').textContent = 
+      document.getElementById('costEstimate').textContent =
         `📊 Token: ${data.usage.inputTokens} input + ${data.usage.outputTokens} output | Costo: ~$${data.usage.cost}`;
     }
     
@@ -1154,146 +2247,51 @@ async function generateReport() {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// COPY / CLEAR
+// ═══════════════════════════════════════════════════════════════
 function copyHTML() {
   const frame = document.getElementById('previewFrame');
   const badge = frame.querySelector('.edit-badge');
   if (badge) badge.remove();
-  
-  const fullHTML = `<!DOCTYPE html>
-<html lang="it">
-<head>
-<meta charset="UTF-8">
-<title>Relazione Clinica</title>
-<style>${document.querySelector('style').textContent}</style>
-</head>
-<body>
-${frame.innerHTML}
-</body>
-</html>`;
-  
-  navigator.clipboard.writeText(fullHTML).then(() => {
-    showToast('✅ HTML copiato!');
-  }).catch(() => {
-    showToast('❌ Errore copia', 'error');
-  });
+  const fullHTML = `<!DOCTYPE html>\n<html lang="it">\n<head>\n<meta charset="UTF-8">\n<title>Relazione Clinica</title>\n<style>${document.querySelector('style').textContent}</style>\n</head>\n<body>\n${frame.innerHTML}\n</body>\n</html>`;
+  navigator.clipboard.writeText(fullHTML).then(() => showToast('✅ HTML copiato!')).catch(() => showToast('❌ Errore copia', 'error'));
 }
 
 function copyText() {
   const frame = document.getElementById('previewFrame');
   const report = frame.querySelector('.report');
-  
-  if (!report) {
-    showToast('⚠️ Nessuna relazione da copiare', 'error');
-    return;
-  }
+  if (!report) { showToast('⚠️ Nessuna relazione da copiare', 'error'); return; }
   
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = report.innerHTML;
-  
   const editBadge = tempDiv.querySelector('.edit-badge');
   if (editBadge) editBadge.remove();
   
   let text = '';
-  
-  const processNode = (node, indent = '') => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const content = node.textContent.trim();
-      if (content) text += content + ' ';
-      return;
-    }
-    
+  const processNode = (node) => {
+    if (node.nodeType === Node.TEXT_NODE) { const c = node.textContent.trim(); if (c) text += c + ' '; return; }
     if (node.nodeType !== Node.ELEMENT_NODE) return;
-    
     const tag = node.tagName.toLowerCase();
-    
-    if (tag === 'h1' || tag === 'h2') {
-      text += '\n\n' + node.textContent.toUpperCase() + '\n';
-      return;
-    }
-    
-    if (tag === 'h3') {
-      text += '\n\n' + node.textContent + '\n';
-      return;
-    }
-    
-    if (tag === 'p') {
-      text += '\n' + node.textContent.trim() + '\n';
-      return;
-    }
-    
-    if (tag === 'li') {
-      text += '\n  • ' + node.textContent.trim();
-      return;
-    }
-    
-    if (tag === 'ul' || tag === 'ol') {
-      text += '\n';
-      node.childNodes.forEach(child => processNode(child, indent + '  '));
-      text += '\n';
-      return;
-    }
-    
-    if (tag === 'table') {
-      text += '\n\n[TABELLA]\n';
-      const rows = node.querySelectorAll('tr');
-      rows.forEach(row => {
-        const cells = row.querySelectorAll('th, td');
-        const rowText = Array.from(cells).map(c => c.textContent.trim()).join(' | ');
-        text += rowText + '\n';
-      });
-      text += '\n';
-      return;
-    }
-    
-    if (tag === 'div') {
-      if (node.classList.contains('report-title')) {
-        text += '\n\n═══ ' + node.textContent.toUpperCase() + ' ═══\n';
-        return;
-      }
-      if (node.classList.contains('patient-name')) {
-        text += '\n\n▸ PAZIENTE: ' + node.textContent.toUpperCase() + '\n';
-        return;
-      }
-      node.childNodes.forEach(child => processNode(child, indent));
-      return;
-    }
-    
-    if (tag === 'br') {
-      text += '\n';
-      return;
-    }
-    
-    if (tag === 'strong' || tag === 'b') {
-      text += node.textContent.toUpperCase() + ' ';
-      return;
-    }
-    
-    node.childNodes.forEach(child => processNode(child, indent));
+    if (tag === 'h2') { text += '\n\n' + node.textContent.toUpperCase() + '\n'; return; }
+    if (tag === 'h3') { text += '\n\n' + node.textContent + '\n'; return; }
+    if (tag === 'p') { text += '\n' + node.textContent.trim() + '\n'; return; }
+    if (tag === 'tr') { const cells = node.querySelectorAll('th,td'); text += '\n' + Array.from(cells).map(c => c.textContent.trim()).join(' | '); return; }
+    if (tag === 'div' && node.classList.contains('report-title')) { text += '\n\n═══ ' + node.textContent.toUpperCase() + ' ═══\n'; return; }
+    if (tag === 'br') { text += '\n'; return; }
+    node.childNodes.forEach(child => processNode(child));
   };
-  
   processNode(tempDiv);
+  text = text.replace(/\n{3,}/g, '\n\n').replace(/[ ]{2,}/g, ' ').trim();
   
-  text = text
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/[ ]{2,}/g, ' ')
-    .trim();
-  
-  navigator.clipboard.writeText(text).then(() => {
-    showToast('✅ Testo copiato! Incolla in Word/Docs');
-  }).catch(() => {
-    showToast('❌ Errore copia', 'error');
-  });
+  navigator.clipboard.writeText(text).then(() => showToast('✅ Testo copiato!')).catch(() => showToast('❌ Errore copia', 'error'));
 }
 
 function clearAll() {
   document.getElementById('inputData').value = '';
-  document.getElementById('previewFrame').innerHTML = `
-    <div class="empty-state">
-      <div class="empty-state-icon">🤖</div>
-      <div><strong>Pronto all'uso!</strong> Incolla i dati e genera la relazione</div>
-      <div style="margin-top: 12px; font-size: 13px;">Scegli tra formato <strong>Completo</strong>, <strong>Sintetico</strong> o <strong>Registro Operatorio</strong></div>
-    </div>
-  `;
+  document.getElementById('egBadge').innerHTML = '';
+  currentEG = null;
+  document.getElementById('previewFrame').innerHTML = '<div class="empty-state"><div class="empty-state-icon">🤖</div><div><strong>Pronto all\'uso!</strong> Incolla i dati e genera la relazione</div></div>';
   document.getElementById('previewFrame').setAttribute('contenteditable', 'false');
   document.getElementById('outputActions').style.display = 'none';
   document.getElementById('costEstimate').textContent = '';
@@ -1307,15 +2305,26 @@ function showToast(message, type = 'success') {
   setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// ESEMPI
+// ═══════════════════════════════════════════════════════════════
 function loadObstetricExample() {
   document.getElementById('reportType').value = 'obstetric';
   onReportTypeChange();
+  
+  // Data UM dinamica: 33 settimane fa
+  const um = new Date();
+  um.setDate(um.getDate() - 33 * 7 - 3);
+  const umStr = String(um.getDate()).padStart(2,'0') + '/' + String(um.getMonth()+1).padStart(2,'0') + '/' + um.getFullYear();
+  const dppDate = new Date(um); dppDate.setDate(dppDate.getDate() + 280);
+  const dppStr = String(dppDate.getDate()).padStart(2,'0') + '/' + String(dppDate.getMonth()+1).padStart(2,'0') + '/' + dppDate.getFullYear();
+  
   document.getElementById('inputData').value = `Sig.ra: LUDOVICA FERRI
 Anni: 36
 Gravida: 1
 Para: 0
-U.M.: 11/06/2025
-D.P.P.: 18/03/2026
+U.M.: ${umStr}
+D.P.P.: ${dppStr}
 IMC: 19 normopeso
 Fumo: Smesso
 Gruppo: 0 NEGATIVO
@@ -1324,21 +2333,23 @@ Malattie in famiglia: mamma k ovaio
 Interventi chirurgici: resezione polipo nel 2021
 Farmaci: Ac folico, Cardirene, Immunoglobuline anti Rh
 
-Screening (02/08/2025):
+Screening:
 Rosolia: Protetta (IgG+ IgM-)
 Toxo: Non prot. (IgG- IgM-)
 CMV: Non prot. (IgG- IgM-)
 Varicella: protetta
 
 Monitoraggio ematochimico:
-Data 02/02/2026 - 34 sett - Hb 10.9 - Plt 220 - Glic 79 - Fibr 519 - Tap 108 - Inr 0.95 - Ptt 24
-Data 09/01/2026 - 30 sett - Hb 11.4 - Plt 219 - Fibr 483 - Tap 109 - Inr 0.95 - Ptt 29 - TSH 3.04 FT4 0.67
-Data 01/12/2025 - 25 sett - Hb 12.6 - Plt 204 - OGTT 80-133-116
+Data recente - 34 sett - Hb 10.9 - Plt 220 - Glic 79 - Fibr 519 - Tap 108 - Inr 0.95 - Ptt 24
+Data -30 sett - Hb 11.4 - Plt 219 - Fibr 483 - TSH 3.04 FT4 0.67
+Data -25 sett - Hb 12.6 - Plt 204 - OGTT 80-133-116
 
 Esami ecografici:
-23/01/2026 - 32 sett - Presentazione cefalica - Peso 1584g (13° percentile) - Placenta anteriore - Doppler a.uterine ai limiti superiori
-02/01/2026 - 29 sett - Peso 1186g (21° percentile) - Doppler a.uterine ai limiti superiori - Alterati
-11/12/2025 - 26 sett - Peso 811g (49° percentile)`;
+32 sett - Presentazione cefalica - Peso 1584g (13° percentile) - Placenta anteriore - Doppler a.uterine ai limiti superiori
+29 sett - Peso 1186g (21° percentile) - Doppler a.uterine ai limiti superiori - Alterati
+26 sett - Peso 811g (49° percentile)`;
+
+  onInputChange();
   showToast('📝 Esempio ostetrico caricato');
 }
 
@@ -1364,11 +2375,9 @@ Prescrizioni: continuare controlli annuali, consigliato PAP test`;
 function loadSurgicalExample() {
   document.getElementById('reportType').value = 'surgical';
   onReportTypeChange();
-  // Attiva chip accesso isteroscopico
   document.querySelectorAll('.access-chip').forEach(c => c.classList.remove('active'));
   const chipIsto = document.querySelector('.access-chip[data-accesso="isteroscopico"]');
   if (chipIsto) { chipIsto.classList.add('active'); aggiornaPatologie(); }
-  // Attiva chip patologia polipo
   setTimeout(() => {
     const chipPolipo = document.querySelector('.patologia-chip[data-patologia="polipo endometriale"]');
     if (chipPolipo) chipPolipo.classList.add('active');
@@ -1381,10 +2390,11 @@ Campione inviato all'esame istologico`;
   showToast('🔪 Esempio chirurgico caricato');
 }
 
-// ── Feedback modal ──────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// FEEDBACK
+// ═══════════════════════════════════════════════════════════════
 function openFeedback() {
-  const overlay = document.getElementById('feedbackOverlay');
-  overlay.style.display = 'flex';
+  document.getElementById('feedbackOverlay').style.display = 'flex';
   document.getElementById('feedbackSuccess').style.display = 'none';
   document.getElementById('feedbackForm').style.display = 'block';
   document.getElementById('feedbackSubmitBtn').textContent = 'Invia →';
@@ -1398,37 +2408,270 @@ function closeFeedback() {
 async function submitFeedback(e) {
   e.preventDefault();
   const btn = document.getElementById('feedbackSubmitBtn');
-  btn.textContent = 'Invio in corso...';
-  btn.disabled = true;
-
+  btn.textContent = 'Invio in corso...'; btn.disabled = true;
   try {
     const form = document.getElementById('feedbackForm');
-    const data = new FormData(form);
-    const resp = await fetch(form.action, {
-      method: 'POST',
-      body: data,
-      headers: { 'Accept': 'application/json' }
-    });
-
-    if (resp.ok) {
-      form.style.display = 'none';
-      document.getElementById('feedbackSuccess').style.display = 'block';
-      setTimeout(closeFeedback, 3000);
-    } else {
-      throw new Error();
-    }
-  } catch {
-    btn.textContent = 'Invia →';
-    btn.disabled = false;
-    showToast('❌ Errore invio — controlla la connessione', 'error');
-  }
+    const resp = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { 'Accept': 'application/json' } });
+    if (resp.ok) { form.style.display = 'none'; document.getElementById('feedbackSuccess').style.display = 'block'; setTimeout(closeFeedback, 3000); }
+    else throw new Error();
+  } catch { btn.textContent = 'Invia →'; btn.disabled = false; showToast('❌ Errore invio', 'error'); }
 }
 
-// Chiudi il modal cliccando fuori
-document.getElementById('feedbackOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeFeedback();
-});
-</script>
+document.getElementById('feedbackOverlay').addEventListener('click', e => { if (e.target === document.getElementById('feedbackOverlay')) closeFeedback(); });
+
+// ═══════════════════════════════════════════════════════════════
+// TEMPLATE RAPIDI
+// ═══════════════════════════════════════════════════════════════
+const TEMPLATES = {
+  controllo: {
+    type: 'gynecologic',
+    text: `Anni [XX]
+UM. [GG/MM/AAAA]
+Note anamnestiche: cicli regolari; parità [X/X/X/X]; familiarità per [k seno/k ovaio/altro — specificare o eliminare]
+Farmaci: nessuno / [specificare]
+Fumo: no / sì [n] sigarette/die
+BMI: [XX]
+Motivo della visita: controllo annuale
+
+Alla visita:
+- utero di volume normale, mobile, non dolente; annessi non palpabili
+- cervice apparentemente indenne
+- effettuato PAP test
+- non si palpano noduli mammari; assenza di secrezione provocata
+
+Eseguita Ecografia di supporto (office) finalizzata alla sola ricerca di dati utili al completamento della visita:
+- endometrio omogeneo mm [X]
+- miometrio [omogeneo / con mioma/i: specificare sede e dimensioni]
+- non evidenza di alterazioni in sede annessiale
+
+Si prescrive:
+- [specificare]`
+  },
+  prima: {
+    type: 'gynecologic',
+    text: `Anni [XX]
+UM. [GG/MM/AAAA]
+Note anamnestiche: menarca a [XX] anni; cicli [regolari/irregolari, specificare]; parità [X/X/X/X]
+Anamnesi patologica remota: [nessuna / specificare]
+Familiarità: [nessuna / specificare]
+Farmaci abituali: [nessuno / specificare]
+Allergie: [nessuna / specificare]
+Fumo: no / sì [n] sigarette/die
+BMI: [XX]
+Motivo della visita: prima visita ginecologica / [specificare]
+
+Alla visita:
+- [descrivere esame bimanuale]
+- [descrivere esame speculare]
+- [eseguito PAP test / HPV test / tampone se pertinente]
+
+Ecografia ginecologica (office):
+- utero [dimensioni, morfologia]
+- endometrio mm [X], [omogeneo/disomogeneo]
+- ovaie [morfologia, follicoli, cisti se presenti]`
+  },
+  menopausa: {
+    type: 'gynecologic',
+    text: `Anni [XX]
+Menopausa da [n] anni (ultima mestruazione: [GG/MM/AAAA])
+Note anamnestiche: menarca a [XX] anni; parità [X/X/X/X]
+Anamnesi patologica remota: [specificare]
+Familiarità: [k seno / k ovaio / k endometrio — specificare o eliminare]
+Farmaci: [specificare / TOS in corso: prodotto, posologia, da quanto]
+Fumo: no / sì [n] sigarette/die
+BMI: [XX]
+Motivo della visita: [controllo annuale / vampate / secchezza vaginale / altro]
+Sintomi climaterico-menopausali: [vampate / sudorazioni notturne / disturbi del sonno / secchezza vaginale / calo libido / umore — specificare o eliminare]
+
+Alla visita:
+- utero [volume, eventuali reperti]
+- mucosa vaginale [trofismo, atrofia]
+- esame speculare: [cervice, colpo]
+
+Ecografia (office):
+- endometrio mm [X] [omogeneo]
+- [eventuali reperti]
+
+MOC-DXA: [ultima eseguita quando / risultati T-score / non eseguita]`
+  },
+  followup: {
+    type: 'gynecologic',
+    text: `Anni [XX]
+UM. [GG/MM/AAAA]
+Diagnosi di riferimento: [cisti ovarica dx/sx / mioma / polipo endometriale / altro]
+Primo riscontro: [GG/MM/AAAA]
+Precedente ecografia: [GG/MM/AAAA] — [descrivere reperto precedente per confronto]
+Motivo della visita: follow-up ecografico
+
+Alla visita:
+- [esame bimanuale: descrivere]
+
+Ecografia ginecologica (office):
+- utero [dimensioni]
+- endometrio mm [X]
+- [reperto in follow-up]: [descrivere caratteristiche attuali: dimensioni, morfologia, contenuto, vascolarizzazione al doppler]
+- [confronto con precedente: invariato / aumentato / ridotto / non più evidenziabile]`
+  },
+  gravidanza: {
+    type: 'obstetric',
+    text: `Sig.ra: [NOME COGNOME]
+Anni: [XX]
+Gravida: [X]
+Para: [X]
+U.M.: [GG/MM/AAAA]
+Gruppo sanguigno: [0+ / A+ / B+ / AB+ ecc.]
+BMI pre-gravidico: [XX]
+Fumo: no / sì [n] sigarette/die (consigliata cessazione)
+Familiarità: [nessuna / specificare]
+Anamnesi patologica remota: [nessuna / specificare]
+Farmaci: [acido folico 400 mcg/die / specificare]
+Allergie: [nessuna / specificare]
+Motivo della visita: controllo in gravidanza
+
+Screening sierologico: rosolia [immune/non immune]; toxoplasma [immune/non immune]; CMV [immune/non immune]; HBsAg neg; HIV neg; VDRL neg
+Thyroid: TSH [valore]
+
+Emocromo: Hb [valore] g/dl; MCV [valore]; Plt [valore]
+Coagulazione: nella norma / [specificare]
+
+Ecografia: [biometrie, presentazione, LA, placenta, flussi doppler se eseguiti]`
+  }
+};
+
+function loadTemplate(type) {
+  const tpl = TEMPLATES[type];
+  if (!tpl) return;
+  document.getElementById('reportType').value = tpl.type;
+  onReportTypeChange();
+  document.getElementById('inputData').value = tpl.text;
+  parseInputBadges();
+  showToast('📋 Template caricato — compila i campi [XX]');
+  document.getElementById('inputData').focus();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PARSING BADGES
+// ═══════════════════════════════════════════════════════════════
+function parseInputBadges() {
+  const text = document.getElementById('inputData').value;
+  const rt = document.getElementById('reportType').value;
+  const container = document.getElementById('parseBadges');
+  if (!text.trim() || rt === 'surgical') { container.innerHTML = ''; return; }
+
+  const badges = [];
+
+  // Età
+  const ageM = text.match(/[Aa]nni[:\s]+(\d{1,2})|(\d{1,3})\s+anni/i);
+  if (ageM) { const a = ageM[1]||ageM[2]; badges.push({cls:'age', icon:'👤', label:`${a} anni`}); }
+
+  // BMI
+  const bmiM = text.match(/BMI[:\s]+([0-9]{1,2}(?:[.,]\d)?)/i);
+  if (bmiM) {
+    const b = parseFloat(bmiM[1].replace(',','.'));
+    const cls = b > 30 ? 'bmi-warn' : b > 25 ? 'bmi' : 'age';
+    const warn = b > 30 ? ' ⚠️ Obesità' : b > 25 ? ' ⚠️ Sovrappeso' : ' ✓';
+    badges.push({cls, icon:'⚖️', label:`BMI ${b}${warn}`});
+  }
+
+  // Fumo
+  if (/fumo[:\s]+s[iì]|fumatore|fumatrice|sigarett[ae]|vaping|elettronica/i.test(text) &&
+      !/fumo[:\s]+no|non[- ]fum/i.test(text)) {
+    badges.push({cls:'smoke', icon:'🚬', label:'Fumo ⚠️'});
+  }
+
+  // Parità
+  const parM = text.match(/parit[àa][:\s]+(\d\/\d\/\d\/\d)/i) ||
+               text.match(/para[:\s]+(\d)/i) ||
+               text.match(/parit[àa][:\s]+(\d)/i);
+  if (parM) badges.push({cls:'parity', icon:'👶', label:`Par. ${parM[1]}`});
+
+  // UM
+  const umM = text.match(/[Uu]\.?[Mm]\.?[:\s]+(\d{1,2}\/\d{1,2}\/\d{2,4})/);
+  if (umM) badges.push({cls:'um', icon:'📅', label:`UM ${umM[1]}`});
+
+  // PAP test
+  if (/PAP\s*test/i.test(text)) badges.push({cls:'pap', icon:'🔬', label:'PAP test'});
+
+  // Ecografia
+  if (/ecografi/i.test(text)) badges.push({cls:'eco', icon:'🔊', label:'Eco office'});
+
+  // Familiarità oncologica
+  if (/familiarit[àa].*\bk\b|k\s+seno|k\s+ovaio|k\s+endometrio|carcinoma.*familiarit/i.test(text)) {
+    badges.push({cls:'famil', icon:'⚠️', label:'Familiarità oncol.'});
+  }
+
+  if (badges.length === 0) { container.innerHTML = ''; return; }
+  container.innerHTML = badges.map(b =>
+    `<span class="parse-badge ${b.cls}">${b.icon} ${b.label}</span>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RX CHIPS
+// ═══════════════════════════════════════════════════════════════
+let rxSelected = new Set();
+
+function toggleRxBody() {
+  const body = document.getElementById('rxBody');
+  const arrow = document.getElementById('rxArrow');
+  body.classList.toggle('open');
+  arrow.textContent = body.classList.contains('open') ? '▲' : '▼';
+}
+
+function toggleRxChip(btn) {
+  const rx = btn.dataset.rx;
+  if (rxSelected.has(rx)) {
+    rxSelected.delete(rx);
+    btn.classList.remove('sel');
+  } else {
+    rxSelected.add(rx);
+    btn.classList.add('sel');
+  }
+  renderRxSelected();
+}
+
+function renderRxSelected() {
+  const count = document.getElementById('rxCount');
+  const area = document.getElementById('rxSelectedArea');
+  const chips = document.getElementById('rxSelChips');
+  const n = rxSelected.size;
+  count.textContent = n;
+  count.classList.toggle('vis', n > 0);
+  area.style.display = n > 0 ? 'block' : 'none';
+  chips.innerHTML = Array.from(rxSelected).map(rx =>
+    `<span class="rx-sel-chip">${rx}<span class="rx-sel-rm" onclick="removeRx('${rx.replace(/'/g,"\\'")}')">✕</span></span>`
+  ).join('');
+}
+
+function removeRx(rx) {
+  rxSelected.delete(rx);
+  document.querySelectorAll('.rx-chip').forEach(btn => {
+    if (btn.dataset.rx === rx) btn.classList.remove('sel');
+  });
+  renderRxSelected();
+}
+
+function getRxPayload() {
+  return Array.from(rxSelected);
+}
+
+// Show/hide rx section based on report type
+function updateRxVisibility() {
+  const rt = document.getElementById('reportType').value;
+  const rxSection = document.getElementById('rxSection');
+  rxSection.style.display = (rt === 'gynecologic') ? 'block' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AI DISCLAIMER — postprocessing client-side
+// ═══════════════════════════════════════════════════════════════
+function appendAIDisclaimer(htmlContent) {
+  const disclaimerHTML = `<p class="ai-disclaimer-note-report" style="font-size:7.5pt;font-style:italic;color:#8a95a3;margin-top:24px;padding-top:10px;border-top:1px solid #e2e8f0;text-align:center;">Relazione redatta con il supporto di intelligenza artificiale (Claude — Anthropic); riletta, verificata e sottoscritta dal medico firmatario.</p>`;
+  // Insert before closing </div> of .report
+  return htmlContent.replace(/<\/div>\s*$/, disclaimerHTML + '</div>');
+}
+
+
 
 </body>
 </html>
