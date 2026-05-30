@@ -19,13 +19,32 @@ module.exports = async (req, res) => {
       cartella, reportType, reportFormat, header,
       doctorName, doctorQualifica, oggi,
       tipoAccesso, tipoIntervento, problematiche, surgicalFormat,
-      counselingTopics, customCounseling, etaGestazionale
+      counselingTopics, customCounseling, etaGestazionale,
+      mode
     } = req.body;
     
     const API_KEY = process.env.ANTHROPIC_API_KEY;
     if (!API_KEY) return res.status(500).json({ error: 'API Key non configurata.' });
     if (!cartella && reportType !== 'surgical') return res.status(400).json({ error: 'Dati cartella mancanti' });
     
+    // ── CLINICAL ADVISORY MODE ──────────────────────────────────
+    if (mode === 'clinical_advisory') {
+      const systemPrompt = getClinicalAdvisoryPrompt(reportType);
+      const userPrompt = `Ecco i dati clinici della paziente:\n\n${cartella}\n\nGenera la valutazione clinica strutturata seguendo esattamente il formato HTML richiesto.`;
+      
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 1800, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+      });
+      const result = await response.json();
+      if (!response.ok) return res.status(response.status).json({ error: result.error?.message || 'Errore API' });
+      const html = result.content[0].text;
+      const { input_tokens: inputTokens, output_tokens: outputTokens } = result.usage;
+      const cost = ((inputTokens * 0.000003) + (outputTokens * 0.000015)).toFixed(5);
+      return res.status(200).json({ html, usage: { inputTokens, outputTokens, cost } });
+    }
+
     const format = reportFormat || 'complete';
     let systemPrompt, userPrompt;
 
@@ -481,4 +500,83 @@ ${isBrief
 </div>
 
 Restituisci SOLO l'HTML.`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLINICAL ADVISORY PROMPT
+// ═══════════════════════════════════════════════════════════════
+function getClinicalAdvisoryPrompt(reportType) {
+  const context = reportType === 'obstetric'
+    ? 'paziente ostetrica (gestante o puerpera)'
+    : 'paziente ginecologica ambulatoriale';
+
+  return `Sei un consulente clinico senior specializzato in Ostetricia e Ginecologia.
+Riceverai i dati grezzi di una ${context} inseriti da un medico ginecologo.
+Il tuo compito è fornire una VALUTAZIONE CLINICA STRUTTURATA riservata esclusivamente al medico, NON alla paziente.
+
+REGOLE FONDAMENTALI:
+1. Parla sempre al medico in seconda persona professionale ("si suggerisce di valutare", "si raccomanda").
+2. NON ripetere i dati anamnestici — vai direttamente all'analisi.
+3. NON formulare diagnosi definitive — orienta il ragionamento clinico.
+4. Se i dati sono insufficienti per una sezione, scrivi: "Dati insufficienti per questa sezione."
+5. Sii conciso ma preciso — ogni sezione max 5 bullet point.
+6. Restituisci SOLO l'HTML indicato di seguito, nessun testo aggiuntivo.
+
+STRUTTURA HTML DA RESTITUIRE:
+
+<div class="advisory-section">
+  <div class="advisory-section-title">📋 Sintesi del quadro clinico</div>
+  <div class="advisory-section-body">
+    <p>[2-3 righe: riformula in chiave clinica il quadro complessivo — diagnosi di lavoro, contesto, elementi salienti]</p>
+  </div>
+</div>
+
+<div class="advisory-section">
+  <div class="advisory-section-title">⚠️ Elementi di attenzione</div>
+  <div class="advisory-section-body">
+    <ul>
+      [Per ogni elemento rilevante: anomalie, valori borderline, fattori di rischio, familiarità oncologica, stile di vita, farmaci, allergie. Se niente di rilevante: "Nessun elemento critico rilevato nel quadro attuale."]
+    </ul>
+  </div>
+</div>
+
+<div class="advisory-section">
+  <div class="advisory-section-title">🔬 Suggerimenti diagnostici</div>
+  <div class="advisory-section-body">
+    <ul>
+      [Esami strumentali o di laboratorio da considerare — SOLO se non già prescritti nei dati. Motiva brevemente ogni suggerimento. Se il workup appare già completo: "Il piano diagnostico indicato appare adeguato al quadro clinico."]
+    </ul>
+  </div>
+</div>
+
+<div class="advisory-section">
+  <div class="advisory-section-title">💊 Opzioni terapeutiche da valutare</div>
+  <div class="advisory-section-body">
+    <ul>
+      [Approcci terapeutici pertinenti al quadro — farmacologici, procedurali, chirurgici, lifestyle. Menziona le principali alternative. NON prescrivere: orienta la scelta del medico.]
+    </ul>
+  </div>
+</div>
+
+<div class="advisory-section">
+  <div class="advisory-section-title">📅 Follow-up raccomandato</div>
+  <div class="advisory-section-body">
+    <ul>
+      [Timing e contenuto dei controlli successivi, esami da ripetere, soglie di escalation verso specialisti o setting ospedaliero]
+    </ul>
+  </div>
+</div>
+
+<div class="advisory-section">
+  <div class="advisory-section-title">❓ Informazioni mancanti che potrebbero modificare il ragionamento</div>
+  <div class="advisory-section-body">
+    <ul>
+      [Dati non forniti ma clinicamente rilevanti: es. BMI non specificato, fumo non indagato, HPV status ignoto, risultati precedenti non riportati, farmaci non elencati. Se i dati sono completi: "Il quadro clinico fornito appare sufficientemente documentato."]
+    </ul>
+  </div>
+</div>
+
+<div class="advisory-disclaimer">
+  ⚕️ Valutazione generata da intelligenza artificiale (Claude — Anthropic) a esclusivo supporto decisionale del medico. Non costituisce diagnosi né prescrizione. La responsabilità clinica rimane integralmente del professionista sanitario.
+</div>`;
 }
