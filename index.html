@@ -630,8 +630,82 @@
     #templateSection, .parse-badges, .rx-section, .ai-disclaimer-row { display: none !important; }
   }
 
-  /* ── INCLUDI REGOLO checkbox (già esistente, assicuro visibilità) ── */
-  .regolo-print-row {
+  /* ── BOTTONI GENERATE (doppio) ── */
+  .generate-row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .btn-primary { flex: 1; min-width: 180px; }
+  .btn-advisory {
+    flex: 1; min-width: 180px;
+    padding: 14px 20px; border-radius: 10px;
+    border: 2px solid #7c3aed;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: white; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; font-family: inherit;
+    display: none; /* shown only for gyn/obs */
+  }
+  .btn-advisory:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(124,58,237,0.35); }
+  .btn-advisory:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* ── ADVISORY PANEL ── */
+  .advisory-panel {
+    margin-top: 20px;
+    border: 2px solid #a855f7;
+    border-radius: 12px;
+    background: #faf5ff;
+    overflow: hidden;
+    display: none;
+  }
+  .advisory-panel.visible { display: block; }
+  .advisory-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: white; cursor: pointer;
+  }
+  .advisory-header-left { display: flex; align-items: center; gap: 10px; }
+  .advisory-title { font-size: 15px; font-weight: 700; }
+  .advisory-subtitle { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+  .advisory-badge {
+    background: rgba(255,255,255,0.25); border-radius: 10px;
+    padding: 2px 9px; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .advisory-body { padding: 18px; display: none; }
+  .advisory-body.open { display: block; }
+  .advisory-section {
+    margin-bottom: 16px; padding-bottom: 16px;
+    border-bottom: 1px solid #e9d5ff;
+  }
+  .advisory-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .advisory-section-title {
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #7c3aed; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .advisory-section-body { font-size: 13px; color: #1e293b; line-height: 1.65; }
+  .advisory-section-body ul { margin: 6px 0 0 16px; padding: 0; }
+  .advisory-section-body li { margin-bottom: 4px; }
+  .advisory-disclaimer {
+    margin-top: 14px; padding: 10px 14px;
+    background: #fff7ed; border-left: 3px solid #f59e0b;
+    border-radius: 0 8px 8px 0; font-size: 11px; color: #92400e;
+    font-style: italic;
+  }
+  .advisory-loader {
+    padding: 32px; text-align: center;
+    color: #7c3aed; font-size: 14px;
+  }
+  .advisory-spinner {
+    width: 32px; height: 32px; border: 3px solid #e9d5ff;
+    border-top-color: #7c3aed; border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+  }
+
+  /* Advisory hidden in print — always */
+  @media print { .advisory-panel, .btn-advisory, .generate-row { display: none !important; } }
+
+
     display: flex; align-items: center; gap: 8px; margin-top: 8px;
     font-size: 12px; color: #475569;
   }
@@ -864,9 +938,14 @@ Facoltativo — le chips accesso + patologia sono sufficienti per un verbale sta
         </div>
       </div>
 
-      <button class="btn-primary" onclick="generateReport()" id="generateBtn">
-        <span id="generateBtnLabel">✨ Genera Relazione con AI</span>
-      </button>
+      <div class="generate-row">
+        <button class="btn-primary" onclick="generateReport(false)" id="generateBtn">
+          <span id="generateBtnLabel">✨ Genera Relazione con AI</span>
+        </button>
+        <button class="btn-advisory" onclick="generateReport(true)" id="advisoryBtn" title="Genera la relazione e aggiunge una valutazione clinica riservata al medico">
+          🧠 + Consulenza AI
+        </button>
+      </div>
       <div class="cost-estimate" id="costEstimate"></div>
       
       <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #e2e8f0;">
@@ -900,6 +979,27 @@ Facoltativo — le chips accesso + patologia sono sufficienti per un verbale sta
           <div class="spinner"></div>
           <div>Claude sta generando la relazione...</div>
           <div style="font-size:12px; color:#94a3b8; margin-top:8px;">Circa 5-15 secondi</div>
+        </div>
+
+        <!-- ═══ ADVISORY PANEL (solo schermo, mai in stampa) ═══ -->
+        <div class="advisory-panel" id="advisoryPanel">
+          <div class="advisory-header" onclick="toggleAdvisory()">
+            <div class="advisory-header-left">
+              <div>
+                <div class="advisory-title">🧠 Valutazione Clinica — Riservata al Medico</div>
+                <div class="advisory-subtitle">Analisi AI del caso · Non stampabile · Non fa parte della relazione</div>
+              </div>
+              <span class="advisory-badge">SOLO MEDICO</span>
+            </div>
+            <span id="advisoryArrow" style="font-size:14px;">▲</span>
+          </div>
+          <div class="advisory-body open" id="advisoryBody">
+            <div class="advisory-loader" id="advisoryLoader" style="display:none;">
+              <div class="advisory-spinner"></div>
+              <div>Analisi clinica in corso...</div>
+            </div>
+            <div id="advisoryContent"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -2171,7 +2271,7 @@ function getCurrentDate() {
 // ═══════════════════════════════════════════════════════════════
 // GENERATE
 // ═══════════════════════════════════════════════════════════════
-async function generateReport() {
+async function generateReport(withAdvisory = false) {
   const inputData = document.getElementById('inputData').value.trim();
   const reportType = document.getElementById('reportType').value;
   const reportFormat = document.getElementById('reportFormat')?.value || 'complete';
@@ -2230,6 +2330,10 @@ async function generateReport() {
     preview.appendChild(badge);
     
     document.getElementById('outputActions').style.display = 'flex';
+
+    // Reset advisory panel
+    document.getElementById('advisoryPanel').classList.remove('visible');
+    document.getElementById('advisoryContent').innerHTML = '';
     
     const label = reportType === 'surgical' ? 'Verbale operatorio' : (reportFormat === 'brief' ? 'Nota sintetica' : 'Relazione completa');
     showToast(`✅ ${label} generata!`);
@@ -2237,6 +2341,11 @@ async function generateReport() {
     if (data.usage) {
       document.getElementById('costEstimate').textContent =
         `📊 Token: ${data.usage.inputTokens} input + ${data.usage.outputTokens} output | Costo: ~$${data.usage.cost}`;
+    }
+
+    // If advisory requested, trigger second call
+    if (withAdvisory && reportType !== 'surgical') {
+      await generateAdvisory(cartella, reportType);
     }
     
   } catch (err) {
@@ -2656,12 +2765,61 @@ function getRxPayload() {
   return Array.from(rxSelected);
 }
 
-// Show/hide rx section based on report type
+// ═══════════════════════════════════════════════════════════════
+// CLINICAL ADVISORY
+// ═══════════════════════════════════════════════════════════════
+async function generateAdvisory(cartella, reportType) {
+  const panel = document.getElementById('advisoryPanel');
+  const loader = document.getElementById('advisoryLoader');
+  const content = document.getElementById('advisoryContent');
+  const advisoryBtn = document.getElementById('advisoryBtn');
+
+  panel.classList.add('visible');
+  document.getElementById('advisoryBody').classList.add('open');
+  document.getElementById('advisoryArrow').textContent = '▲';
+  loader.style.display = 'block';
+  content.innerHTML = '';
+  if (advisoryBtn) advisoryBtn.disabled = true;
+
+  // Scroll to advisory
+  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cartella, reportType, mode: 'clinical_advisory' })
+    });
+
+    if (!response.ok) { const e = await response.json(); throw new Error(e.error || 'Errore advisory'); }
+    const data = await response.json();
+    content.innerHTML = data.html;
+
+  } catch (err) {
+    content.innerHTML = `<div style="color:#dc2626;padding:12px;">❌ ${err.message}</div>`;
+    showToast('❌ Errore consulenza: ' + err.message, 'error');
+  } finally {
+    loader.style.display = 'none';
+    if (advisoryBtn) advisoryBtn.disabled = false;
+  }
+}
+
+function toggleAdvisory() {
+  const body = document.getElementById('advisoryBody');
+  const arrow = document.getElementById('advisoryArrow');
+  body.classList.toggle('open');
+  arrow.textContent = body.classList.contains('open') ? '▲' : '▼';
+}
+
+// Show advisory button only for gyn/obs
 function updateRxVisibility() {
   const rt = document.getElementById('reportType').value;
-  const rxSection = document.getElementById('rxSection');
-  rxSection.style.display = (rt === 'gynecologic') ? 'block' : 'none';
+  document.getElementById('rxSection').style.display = (rt === 'gynecologic') ? 'block' : 'none';
+  const advBtn = document.getElementById('advisoryBtn');
+  if (advBtn) advBtn.style.display = (rt !== 'surgical') ? 'flex' : 'none';
 }
+
+
 
 // ═══════════════════════════════════════════════════════════════
 // AI DISCLAIMER — postprocessing client-side
