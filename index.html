@@ -2178,18 +2178,19 @@ async function generateReport() {
   const doctorName = document.getElementById('doctorName').value.trim();
   const doctorQualifica = document.getElementById('doctorQualifica')?.value.trim() || '';
   const aiDisclaimer = document.getElementById('aiDisclaimerCheck')?.checked || false;
-  
-  // Inject rx prescriptions into input text
+
+  // Validate first
+  if (!inputData && reportType !== 'surgical') { showToast('⚠️ Inserisci i dati della cartella', 'error'); return; }
+  if (!inputData && reportType === 'surgical' && getAccessiSelezionati().length === 0) {
+    showToast('⚠️ Seleziona almeno una via di accesso', 'error'); return;
+  }
+
+  // Build cartella: inject rx prescriptions if any selected
   const rxItems = getRxPayload();
   let cartella = inputData;
   if (rxItems.length > 0 && reportType !== 'surgical') {
     cartella += '\n\nPRESCRIZIONI AGGIUNTIVE DA INCLUDERE OBBLIGATORIAMENTE nella sezione Piano/Prescrizioni:\n' +
       rxItems.map(rx => `- ${rx}`).join('\n');
-  }
-  
-  if (!inputData && reportType !== 'surgical') { showToast('⚠️ Inserisci i dati della cartella', 'error'); return; }
-  if (!inputData && reportType === 'surgical' && getAccessiSelezionati().length === 0) {
-    showToast('⚠️ Seleziona almeno una via di accesso', 'error'); return;
   }
   
   const header = getHeaderConfig();
@@ -2560,8 +2561,8 @@ function parseInputBadges() {
 
   const badges = [];
 
-  // Età
-  const ageM = text.match(/[Aa]nni[:\s]+(\d{1,2})|(\d{1,3})\s+anni/i);
+  // Età — pattern robusto: non matcha anni in date (26/05) né "annuali"
+  const ageM = text.match(/(?:\banni\b[:\s]+|(?:^|\s)et[aà][:\s]+)(\d{2,3})\b(?!\/)|(?<!\d)(\d{2,3})\s+\banni\b(?!u)/i);
   if (ageM) { const a = ageM[1]||ageM[2]; badges.push({cls:'age', icon:'👤', label:`${a} anni`}); }
 
   // BMI
