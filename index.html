@@ -703,7 +703,64 @@
   }
 
   /* Advisory hidden in print — always */
-  @media print { .advisory-panel, .btn-advisory, .generate-row { display: none !important; } }
+  @media print {
+    .advisory-panel, .btn-advisory, .generate-row { display: none !important; }
+    .advisory-print-only { display: block !important; }
+  }
+  .advisory-print-only { display: none; }
+
+  /* ── ADVISORY QUESTIONS ── */
+  .advisory-questions-block {
+    margin-top: 18px; padding: 16px 18px;
+    background: #f3e8ff; border-radius: 10px;
+    border: 1.5px solid #d8b4fe;
+  }
+  .advisory-questions-title {
+    font-size: 12px; font-weight: 700; color: #6d28d9;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+  }
+  .advisory-question-item { margin-bottom: 14px; }
+  .advisory-question-item:last-child { margin-bottom: 0; }
+  .advisory-question-text {
+    font-size: 13px; font-weight: 600; color: #1e293b;
+    margin-bottom: 7px; line-height: 1.4;
+  }
+  .advisory-options-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .advisory-option {
+    padding: 5px 13px; border-radius: 16px;
+    border: 1.5px solid #c4b5fd; background: white;
+    color: #5b21b6; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+  }
+  .advisory-option:hover { border-color: #7c3aed; color: #7c3aed; background: #faf5ff; }
+  .advisory-option.sel { background: #7c3aed; border-color: #7c3aed; color: white; }
+  .advisory-update-row {
+    margin-top: 14px; display: flex; gap: 10px; align-items: center;
+  }
+  .btn-advisory-update {
+    padding: 10px 20px; border-radius: 8px;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    border: none; color: white; font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-advisory-update:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(124,58,237,0.35); }
+  .btn-advisory-update:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .advisory-update-hint { font-size: 11px; color: #94a3b8; font-style: italic; }
+
+  /* Print advisory separately */
+  .btn-advisory-print {
+    padding: 8px 16px; border-radius: 8px;
+    border: 1.5px solid #7c3aed; background: white;
+    color: #7c3aed; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+    display: none;
+  }
+  .btn-advisory-print.vis { display: inline-flex; align-items: center; gap: 5px; }
+  .btn-advisory-print:hover { background: #faf5ff; }
+
+
 
 
     display: flex; align-items: center; gap: 8px; margin-top: 8px;
@@ -991,7 +1048,10 @@ Facoltativo — le chips accesso + patologia sono sufficienti per un verbale sta
               </div>
               <span class="advisory-badge">SOLO MEDICO</span>
             </div>
-            <span id="advisoryArrow" style="font-size:14px;">▲</span>
+            <div style="display:flex;align-items:center;gap:10px;" onclick="event.stopPropagation()">
+              <button class="btn-advisory-print" id="btnAdvisoryPrint" onclick="printAdvisory()">🖨️ Stampa consulenza</button>
+              <span id="advisoryArrow" style="font-size:14px;cursor:pointer;" onclick="toggleAdvisory()">▲</span>
+            </div>
           </div>
           <div class="advisory-body open" id="advisoryBody">
             <div class="advisory-loader" id="advisoryLoader" style="display:none;">
@@ -2411,6 +2471,9 @@ function clearAll() {
   document.getElementById('advisoryContent').innerHTML = '';
   document.getElementById('advisoryBody').classList.add('open');
   document.getElementById('advisoryArrow').textContent = '▲';
+  document.getElementById('btnAdvisoryPrint').classList.remove('vis');
+  _advisoryCartella = ''; _advisoryReportType = '';
+  _advisoryQuestions = []; _advisoryAnswers = {};
   // Reset rx chips
   rxSelected.clear();
   document.querySelectorAll('.rx-chip.sel').forEach(c => c.classList.remove('sel'));
@@ -2776,22 +2839,32 @@ function getRxPayload() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CLINICAL ADVISORY
+// CLINICAL ADVISORY — INTERATTIVO
 // ═══════════════════════════════════════════════════════════════
+let _advisoryCartella = '';
+let _advisoryReportType = '';
+let _advisoryQuestions = [];   // [{q, options[]}]
+let _advisoryAnswers = {};     // {index: selectedOption}
+
 async function generateAdvisory(cartella, reportType) {
+  _advisoryCartella = cartella;
+  _advisoryReportType = reportType;
+  _advisoryQuestions = [];
+  _advisoryAnswers = {};
+
   const panel = document.getElementById('advisoryPanel');
-  const loader = document.getElementById('advisoryLoader');
+  const loaderEl = document.getElementById('advisoryLoader');
   const content = document.getElementById('advisoryContent');
   const advisoryBtn = document.getElementById('advisoryBtn');
 
   panel.classList.add('visible');
   document.getElementById('advisoryBody').classList.add('open');
   document.getElementById('advisoryArrow').textContent = '▲';
-  loader.style.display = 'block';
+  loaderEl.style.display = 'block';
   content.innerHTML = '';
+  document.getElementById('btnAdvisoryPrint').classList.remove('vis');
   if (advisoryBtn) advisoryBtn.disabled = true;
 
-  // Scroll to advisory
   setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
 
   try {
@@ -2800,18 +2873,150 @@ async function generateAdvisory(cartella, reportType) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cartella, reportType, mode: 'clinical_advisory' })
     });
-
     if (!response.ok) { const e = await response.json(); throw new Error(e.error || 'Errore advisory'); }
     const data = await response.json();
-    content.innerHTML = data.html;
+
+    // data.json contains {sections, questions}
+    const parsed = data.json;
+    _advisoryQuestions = parsed.questions || [];
+
+    content.innerHTML = parsed.sections;
+    _renderAdvisoryQuestions();
 
   } catch (err) {
     content.innerHTML = `<div style="color:#dc2626;padding:12px;">❌ ${err.message}</div>`;
     showToast('❌ Errore consulenza: ' + err.message, 'error');
   } finally {
-    loader.style.display = 'none';
+    loaderEl.style.display = 'none';
     if (advisoryBtn) advisoryBtn.disabled = false;
   }
+}
+
+function _renderAdvisoryQuestions() {
+  const content = document.getElementById('advisoryContent');
+  if (!_advisoryQuestions.length) {
+    document.getElementById('btnAdvisoryPrint').classList.add('vis');
+    return;
+  }
+
+  const qHtml = `
+    <div class="advisory-questions-block" id="advisoryQBlock">
+      <div class="advisory-questions-title">🙋 Approfondimento — Seleziona le risposte per affinare la consulenza</div>
+      ${_advisoryQuestions.map((q, i) => `
+        <div class="advisory-question-item">
+          <div class="advisory-question-text">${i + 1}. ${q.q}</div>
+          <div class="advisory-options-row">
+            ${q.options.map(opt => `
+              <button type="button" class="advisory-option" data-qi="${i}" data-opt="${opt.replace(/"/g,'&quot;')}"
+                onclick="selectAdvisoryOption(this, ${i}, '${opt.replace(/'/g,"\\'")}')">${opt}</button>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+      <div class="advisory-update-row">
+        <button class="btn-advisory-update" id="btnAdvisoryUpdate" onclick="updateAdvisory()" disabled>
+          🔄 Aggiorna consulenza
+        </button>
+        <span class="advisory-update-hint" id="advisoryUpdateHint">Seleziona almeno una risposta</span>
+      </div>
+    </div>`;
+  content.insertAdjacentHTML('beforeend', qHtml);
+}
+
+function selectAdvisoryOption(btn, qi, opt) {
+  // Deselect others in same question
+  document.querySelectorAll(`.advisory-option[data-qi="${qi}"]`).forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  _advisoryAnswers[qi] = opt;
+
+  // Enable update button if at least one answer selected
+  const updateBtn = document.getElementById('btnAdvisoryUpdate');
+  if (updateBtn) {
+    updateBtn.disabled = false;
+    document.getElementById('advisoryUpdateHint').textContent =
+      `${Object.keys(_advisoryAnswers).length}/${_advisoryQuestions.length} risposte selezionate`;
+  }
+}
+
+async function updateAdvisory() {
+  const loaderEl = document.getElementById('advisoryLoader');
+  const content = document.getElementById('advisoryContent');
+  const updateBtn = document.getElementById('btnAdvisoryUpdate');
+
+  // Build Q&A context
+  const qaContext = _advisoryQuestions.map((q, i) =>
+    `D: ${q.q}\nR: ${_advisoryAnswers[i] || '(non risposto)'}`
+  ).join('\n\n');
+
+  // Remove questions block, show loader
+  const qBlock = document.getElementById('advisoryQBlock');
+  if (qBlock) qBlock.remove();
+  loaderEl.style.display = 'block';
+  if (updateBtn) updateBtn.disabled = true;
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cartella: _advisoryCartella,
+        reportType: _advisoryReportType,
+        mode: 'clinical_advisory_update',
+        qaContext
+      })
+    });
+    if (!response.ok) { const e = await response.json(); throw new Error(e.error || 'Errore aggiornamento'); }
+    const data = await response.json();
+
+    content.innerHTML = data.json.sections;
+    document.getElementById('btnAdvisoryPrint').classList.add('vis');
+    showToast('✅ Consulenza aggiornata!');
+
+  } catch (err) {
+    content.insertAdjacentHTML('beforeend',
+      `<div style="color:#dc2626;padding:12px;">❌ ${err.message}</div>`);
+    showToast('❌ ' + err.message, 'error');
+  } finally {
+    loaderEl.style.display = 'none';
+  }
+}
+
+function printAdvisory() {
+  const sectionsHtml = document.getElementById('advisoryContent').innerHTML;
+  const doctorName = document.getElementById('doctorName')?.value || 'Dr. Carlo Piscicelli';
+  const oggi = new Date().toLocaleDateString('it-IT', {day:'2-digit', month:'long', year:'numeric'});
+  const win = window.open('', '_blank', 'width=800,height=700');
+  win.document.write(`<!DOCTYPE html>
+<html lang="it"><head><meta charset="UTF-8">
+<title>Valutazione Clinica Riservata</title>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; max-width: 720px; margin: 40px auto; color: #1e293b; font-size: 13px; }
+  .print-header { border-bottom: 3px solid #7c3aed; padding-bottom: 14px; margin-bottom: 20px; }
+  .print-header h1 { font-size: 16px; color: #7c3aed; margin: 0 0 4px; }
+  .print-header p { margin: 0; font-size: 11px; color: #64748b; }
+  .advisory-section { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e9d5ff; }
+  .advisory-section:last-of-type { border-bottom: none; }
+  .advisory-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #7c3aed; margin-bottom: 7px; }
+  .advisory-section-body { font-size: 12px; line-height: 1.6; }
+  .advisory-section-body ul { margin: 4px 0 0 16px; padding: 0; }
+  .advisory-section-body li { margin-bottom: 3px; }
+  .advisory-disclaimer { margin-top: 16px; padding: 8px 12px; background: #fff7ed; border-left: 3px solid #f59e0b; font-size: 10px; color: #92400e; font-style: italic; }
+  .print-footer { margin-top: 28px; padding-top: 12px; border-top: 2px solid #7c3aed; font-size: 10px; color: #64748b; display: flex; justify-content: space-between; }
+  .watermark { color: #dc2626; font-weight: 700; font-size: 10px; letter-spacing: 1px; }
+</style>
+</head><body>
+<div class="print-header">
+  <h1>🧠 Valutazione Clinica — Documento Riservato al Medico</h1>
+  <p>Data: ${oggi} &nbsp;·&nbsp; Redatto da: ${doctorName} con supporto AI (Claude — Anthropic)</p>
+</div>
+${sectionsHtml}
+<div class="print-footer">
+  <span class="watermark">⚕ RISERVATO AL MEDICO — NON CONSEGNARE ALLA PAZIENTE</span>
+  <span>${oggi}</span>
+</div>
+</body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 400);
 }
 
 function toggleAdvisory() {
@@ -2828,6 +3033,8 @@ function updateRxVisibility() {
   const advBtn = document.getElementById('advisoryBtn');
   if (advBtn) advBtn.style.display = (rt !== 'surgical') ? 'flex' : 'none';
 }
+
+
 
 
 
