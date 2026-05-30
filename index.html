@@ -2400,11 +2400,21 @@ function copyText() {
 function clearAll() {
   document.getElementById('inputData').value = '';
   document.getElementById('egBadge').innerHTML = '';
+  document.getElementById('parseBadges').innerHTML = '';
   currentEG = null;
   document.getElementById('previewFrame').innerHTML = '<div class="empty-state"><div class="empty-state-icon">🤖</div><div><strong>Pronto all\'uso!</strong> Incolla i dati e genera la relazione</div></div>';
   document.getElementById('previewFrame').setAttribute('contenteditable', 'false');
   document.getElementById('outputActions').style.display = 'none';
   document.getElementById('costEstimate').textContent = '';
+  // Reset advisory panel
+  document.getElementById('advisoryPanel').classList.remove('visible');
+  document.getElementById('advisoryContent').innerHTML = '';
+  document.getElementById('advisoryBody').classList.add('open');
+  document.getElementById('advisoryArrow').textContent = '▲';
+  // Reset rx chips
+  rxSelected.clear();
+  document.querySelectorAll('.rx-chip.sel').forEach(c => c.classList.remove('sel'));
+  renderRxSelected();
   showToast('🔄 Reset completato');
 }
 
