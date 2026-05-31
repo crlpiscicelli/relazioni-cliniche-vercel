@@ -35,7 +35,7 @@ module.exports = async (req, res) => {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 3500, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 2500, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
       });
       const result = await response.json();
       if (!response.ok) return res.status(response.status).json({ error: result.error?.message || 'Errore API' });
@@ -78,7 +78,7 @@ module.exports = async (req, res) => {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 3000, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 2500, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
       });
       const result = await response.json();
       if (!response.ok) return res.status(response.status).json({ error: result.error?.message || 'Errore API' });
