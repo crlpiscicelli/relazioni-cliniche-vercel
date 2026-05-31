@@ -2894,10 +2894,10 @@ async function generateAdvisory(cartella, reportType) {
 
 function _renderAdvisoryQuestions() {
   const content = document.getElementById('advisoryContent');
-  if (!_advisoryQuestions.length) {
-    document.getElementById('btnAdvisoryPrint').classList.add('vis');
-    return;
-  }
+  // Print button always visible after round 1
+  document.getElementById('btnAdvisoryPrint').classList.add('vis');
+
+  if (!_advisoryQuestions.length) return;
 
   const qHtml = `
     <div class="advisory-questions-block" id="advisoryQBlock">
