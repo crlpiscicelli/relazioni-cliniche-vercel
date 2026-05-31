@@ -35,12 +35,35 @@ module.exports = async (req, res) => {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 2200, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 3500, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
       });
       const result = await response.json();
       if (!response.ok) return res.status(response.status).json({ error: result.error?.message || 'Errore API' });
-      let raw = result.content[0].text.trim().replace(/^```json\s*/,'').replace(/```$/,'').trim();
-      const parsed = JSON.parse(raw);
+      let raw = result.content[0].text.trim().replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```$/,'').trim();
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch(e) {
+        // Try to salvage truncated JSON: extract sections between first { and last complete }
+        const match = raw.match(/\{[\s\S]*/);
+        if (match) {
+          // Close any unterminated string and object
+          let salvage = match[0];
+          // Remove trailing incomplete key/value
+          salvage = salvage.replace(/,\s*"[^"]*$/, '').replace(/,\s*$/, '');
+          // Close arrays and objects as needed
+          const opens = (salvage.match(/\[/g)||[]).length - (salvage.match(/\]/g)||[]).length;
+          const objs  = (salvage.match(/\{/g)||[]).length - (salvage.match(/\}/g)||[]).length;
+          salvage += ']'.repeat(Math.max(0,opens)) + '}'.repeat(Math.max(0,objs));
+          try { parsed = JSON.parse(salvage); } catch(e2) {
+            // Last resort: wrap whatever HTML we got
+            const secMatch = raw.match(/"sections"\s*:\s*"([\s\S]+?)(?:"\s*,\s*"questions"|"\s*\})/);
+            parsed = { sections: secMatch ? secMatch[1].replace(/\\n/g,'\n').replace(/\\"/g,'"') : raw, questions: [] };
+          }
+        } else {
+          parsed = { sections: raw, questions: [] };
+        }
+      }
       const { input_tokens: inputTokens, output_tokens: outputTokens } = result.usage;
       const cost = ((inputTokens * 0.000003) + (outputTokens * 0.000015)).toFixed(5);
       return res.status(200).json({ json: parsed, usage: { inputTokens, outputTokens, cost } });
@@ -55,12 +78,18 @@ module.exports = async (req, res) => {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 2000, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 3000, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
       });
       const result = await response.json();
       if (!response.ok) return res.status(response.status).json({ error: result.error?.message || 'Errore API' });
-      let raw = result.content[0].text.trim().replace(/^```json\s*/,'').replace(/```$/,'').trim();
-      const parsed = JSON.parse(raw);
+      let raw = result.content[0].text.trim().replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```$/,'').trim();
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch(e) {
+        const secMatch = raw.match(/"sections"\s*:\s*"([\s\S]+?)(?:"\s*\}|$)/);
+        parsed = { sections: secMatch ? secMatch[1].replace(/\\n/g,'\n').replace(/\\"/g,'"') : raw };
+      }
       const { input_tokens: inputTokens, output_tokens: outputTokens } = result.usage;
       const cost = ((inputTokens * 0.000003) + (outputTokens * 0.000015)).toFixed(5);
       return res.status(200).json({ json: parsed, usage: { inputTokens, outputTokens, cost } });
@@ -528,53 +557,30 @@ Restituisci SOLO l'HTML.`;
 // CLINICAL ADVISORY PROMPTS
 // ═══════════════════════════════════════════════════════════════
 function getClinicalAdvisoryPrompt(reportType) {
-  const ctx = reportType === 'obstetric' ? 'paziente ostetrica (gestante o puerpera)' : 'paziente ginecologica ambulatoriale';
-  return `Sei un consulente clinico senior specializzato in Ostetricia e Ginecologia.
-Riceverai i dati grezzi di una ${ctx} inseriti da un medico ginecologo.
+  const ctx = reportType === 'obstetric' ? 'ostetrica (gestante/puerpera)' : 'ginecologica ambulatoriale';
+  return `Sei un consulente clinico senior in OB/GYN. Ricevi dati di una paziente ${ctx}.
 
-COMPITO: restituire un oggetto JSON con due campi:
-1. "sections": stringa HTML con la valutazione clinica strutturata (6 sezioni)
-2. "questions": array di 2-3 oggetti {q: "domanda", options: ["opzione1","opzione2","opzione3","opzione4"]}
-   Le domande devono riguardare informazioni clinicamente rilevanti assenti nei dati forniti.
-   Le opzioni devono coprire le risposte plausibili in modo mutuamente esclusivo e clinicamente sensato.
-   Esempio: {q: "HPV test eseguito in precedenza?", options: ["Mai eseguito","Negativo < 3 anni fa","Negativo > 3 anni fa","Positivo — genotipo noto"]}
-
-REGOLE:
-- Parla al medico (non alla paziente). Usa "si valuti", "si consideri".
-- NON ripetere i dati anamnestici. Analizza e orienta.
-- NON formulare diagnosi definitive.
-- Ogni sezione: max 5 bullet point concisi.
-- Le domande devono essere solo su dati ASSENTI — non chiedere cose già presenti nel testo.
-- Restituisci SOLO JSON valido, nessun testo fuori dal JSON, nessun blocco markdown.
-
-STRUTTURA HTML del campo "sections":
-<div class="advisory-section">
-  <div class="advisory-section-title">📋 Sintesi del quadro clinico</div>
-  <div class="advisory-section-body"><p>[2-3 righe: quadro diagnostico di lavoro, contesto, elementi salienti]</p></div>
-</div>
-<div class="advisory-section">
-  <div class="advisory-section-title">⚠️ Elementi di attenzione</div>
-  <div class="advisory-section-body"><ul>[anomalie, valori borderline, fattori di rischio, familiarità, stile di vita]</ul></div>
-</div>
-<div class="advisory-section">
-  <div class="advisory-section-title">🔬 Suggerimenti diagnostici</div>
-  <div class="advisory-section-body"><ul>[esami da considerare NON già prescritti; se workup completo: "Il piano diagnostico appare adeguato."]</ul></div>
-</div>
-<div class="advisory-section">
-  <div class="advisory-section-title">💊 Opzioni terapeutiche da valutare</div>
-  <div class="advisory-section-body"><ul>[approcci farmacologici, procedurali, chirurgici, lifestyle pertinenti — orientare, non prescrivere]</ul></div>
-</div>
-<div class="advisory-section">
-  <div class="advisory-section-title">📅 Follow-up raccomandato</div>
-  <div class="advisory-section-body"><ul>[timing controlli, esami da ripetere, soglie di escalation]</ul></div>
-</div>
-<div class="advisory-section">
-  <div class="advisory-section-title">❓ Informazioni mancanti rilevanti</div>
-  <div class="advisory-section-body"><ul>[dati assenti che potrebbero modificare il ragionamento; se dati completi: "Quadro sufficientemente documentato."]</ul></div>
-</div>
-<div class="advisory-disclaimer">⚕️ Valutazione generata da intelligenza artificiale (Claude — Anthropic) a esclusivo supporto decisionale del medico. Non costituisce diagnosi né prescrizione. La responsabilità clinica rimane integralmente del professionista sanitario.</div>`;
+Restituisci SOLO JSON valido (nessun markdown, nessun testo esterno):
+{
+  "sections": "<stringa HTML con 6 sezioni advisory>",
+  "questions": [{"q":"domanda","options":["A","B","C","D"]}, ...]
 }
 
+REGOLE SECTIONS:
+- 6 sezioni con questa struttura HTML esatta (usa \\n per le newline nel JSON):
+  <div class="advisory-section"><div class="advisory-section-title">EMOJI Titolo</div><div class="advisory-section-body"><ul><li>punto</li></ul></div></div>
+- Titoli fissi: "📋 Sintesi", "⚠️ Elementi di attenzione", "🔬 Suggerimenti diagnostici", "💊 Opzioni terapeutiche", "📅 Follow-up", "❓ Info mancanti"
+- Ultima sezione: sostituisci <ul> con <p class="advisory-disclaimer">⚕️ Valutazione AI a supporto del medico. Non è diagnosi. La responsabilità clinica è del professionista.</p>
+- Max 4 <li> per sezione. Sii conciso. Parla al medico ("si valuti", "si consideri").
+- NON ripetere i dati anamnestici. NON dare diagnosi definitive.
+
+REGOLE QUESTIONS:
+- 2-3 domande SOLO su dati assenti nei dati forniti, clinicamente rilevanti per questo caso.
+- 3-4 opzioni mutuamente esclusive e clinicamente sensate.
+- Esempio: {"q":"HPV test precedente?","options":["Mai eseguito","Negativo <3 anni","Negativo >3 anni","Positivo"]}
+
+JSON VALIDO: escapa le virgolette interne con \\", usa \\n per newline nelle stringhe HTML.`;
+}
 function getClinicalAdvisoryUpdatePrompt(reportType) {
   const ctx = reportType === 'obstetric' ? 'ostetrica' : 'ginecologica';
   return `Sei un consulente clinico senior in Ostetricia e Ginecologia.
