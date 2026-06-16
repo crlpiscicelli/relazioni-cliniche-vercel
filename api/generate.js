@@ -170,7 +170,7 @@ module.exports = async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-opus-4-8',
         max_tokens: reportType === 'surgical' ? 4000 : (format === 'brief' ? 2000 : 4000),
         messages: [{ role: 'user', content: userPrompt }],
         system: systemPrompt
